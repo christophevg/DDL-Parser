@@ -188,6 +188,8 @@ public class DDL {
       if(! ( this.parseComment() || this.parseStatement() ) ) {
         return this.notifyParseFailure();
       }
+
+      this.ddl.skipLeadingWhitespace();
     }
 
     return true;
