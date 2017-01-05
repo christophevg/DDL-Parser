@@ -9,65 +9,65 @@ using System.Linq;
 
 using System.Diagnostics;
 
+public abstract class Statement {
+  public string Body { get; set; }
+}
+
+public class Comment : Statement {
+  public override string ToString() {
+    return "comment(" + this.Body + ")";
+  }
+}
+
+public class CreateStatement : Statement {
+  public override string ToString() {
+    return "create    " + this.Body;
+  }
+}
+
+public class CreateDatabaseStatement : Statement {
+  public string Name { get; set; }
+  public Dictionary<string,string> Parameters { get; set; } =
+    new Dictionary<string,string>();
+  public override string ToString() {
+    return "database(" + this.Name + ")" + "{" +
+      string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+      "}";
+  }
+}
+
+public class CreateTablespaceStatement : Statement {
+  public string Name { get; set; }
+  public string Database { get; set; }
+  public string StorageGroup { get; set; }
+  public Dictionary<string,string> Parameters { get; set; } =
+    new Dictionary<string,string>();
+  public override string ToString() {
+    return "tablespace(" + this.Name +
+      " in " + this.Database +
+      " using " + this.StorageGroup + ")" + "{" +
+      string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+      "}";
+  }
+}
+
+
+public class AlterStatement : Statement {
+  public override string ToString() {
+    return "alter     " + this.Body;
+  }
+}
+
+public class SetStatement : Statement {
+  public override string ToString() {
+    return "set       " + this.Body;
+  }
+}
+
 public class DDL {
 
-  private abstract class Statement {
-    public string Body { get; set; }
-  }
-  
-  private class Comment : Statement {
-    public override string ToString() {
-      return "comment   " + this.Body;
-    }
-  }
-
-  private class CreateStatement : Statement {
-    public override string ToString() {
-      return "create    " + this.Body;
-    }
-  }
-
-  private class CreateDatabaseStatement : Statement {
-    public string Name { get; set; }
-    public Dictionary<string,string> Parameters { get; set; } =
-      new Dictionary<string,string>();
-    public override string ToString() {
-      return "database(" + this.Name + ")" + "{" +
-        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
-        "}";
-    }
-  }
-
-  private class CreateTablespaceStatement : Statement {
-    public string Name { get; set; }
-    public string Database { get; set; }
-    public string StorageGroup { get; set; }
-    public Dictionary<string,string> Parameters { get; set; } =
-      new Dictionary<string,string>();
-    public override string ToString() {
-      return "tablespace(" + this.Name +
-        " in " + this.Database +
-        " using " + this.StorageGroup + ")" + "{" +
-        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
-        "}";
-    }
-  }
-
-
-  private class AlterStatement : Statement {
-    public override string ToString() {
-      return "alter     " + this.Body;
-    }
-  }
-
-  private class SetStatement : Statement {
-    public override string ToString() {
-      return "set       " + this.Body;
-    }
-  }
-
   private List<Statement> statements = new List<Statement>  {};
-  
+
   public int Length {
     get { return this.statements.Count; }
   }
