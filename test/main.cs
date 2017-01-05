@@ -35,7 +35,8 @@ public class DDLTest {
       @"     CREATE DATABASE
        TEST001
           PARAM1 param1
-            PARAM2 param2;",
+            PARAM2 param2;
+",
       "database(TEST001){PARAM1=param1,PARAM2=param2}"
     );
   }
