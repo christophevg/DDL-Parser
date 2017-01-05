@@ -27,6 +27,17 @@ public class DDL {
     }
   }
 
+  private class CreateDatabaseStatement : Statement {
+    public string Name { get; set; }
+    public Dictionary<string,string> Parameters { get; set; } =
+      new Dictionary<string,string>();
+    public override string ToString() {
+      return "database(" + this.Name + ")" + "{" +
+        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+        "}";
+    }
+  }
+
   private class AlterStatement : Statement {
     public override string ToString() {
       return "alter     " + this.Body;
@@ -63,11 +74,12 @@ public class DDL {
     private string text = "";
 
     // helper Regular Expressions for general clean-up
-    private static Regex discardedCharacters   = new Regex( "\r"          );
-    private static Regex repeatedWhitespace    = new Regex( "[ \t][ \t]*" );
-    private static Regex leadingWhitespace     = new Regex( "^[\n \t]+"   );
-    private static Regex trailingWhitespace    = new Regex( "[ \t]+$"     );
-    private static Regex newlinesAndWhitespace = new Regex( "\n[ \t]*"    );
+    private static Regex discardedCharacters   = new Regex( "\r"           );
+    private static Regex repeatedWhitespace    = new Regex( "[ \t][ \t]*"  );
+    private static Regex leadingWhitespace     = new Regex( "^[\n \t]+"    );
+    private static Regex trailingWhitespace    = new Regex( "[ \t]+$"      );
+    private static Regex newlinesAndWhitespace = new Regex( "\n[ \t]*"     );
+    private static Regex nextId                = new Regex( "^[A-Z0-1]+"      );
 
     // trim leading and trailing whitespace
     // also replace new-line characters and optionally addition whitespace
@@ -105,6 +117,26 @@ public class DDL {
       string consumed = this.text.Substring(0, length);
       this.text = this.text.Substring(length);
       return this.trim(consumed);
+    }
+
+    public string consumeId() {
+      this.trimLeadingWhitespace();
+      Match m = Parsable.nextId.Match(this.text);
+      if(m.Success) {
+        int length = m.Groups[0].Captures[0].ToString().Length;
+        return this.consume(length);
+      }
+      return "";
+    }
+
+    public Dictionary<string,string> consumeDictionary() {
+      string[] mappings = this.trim(this.consumeUpTo(";")).Split(' ');
+      this.consume(";");
+      Dictionary<string,string> dict = new Dictionary<string,string>();
+      for(int i=0; i<mappings.Length; i+=2) {
+        dict[mappings[i]] = mappings[i+1];
+      }
+      return dict;
     }
     
     public string peek(int length) {
@@ -148,15 +180,60 @@ public class DDL {
 
         || this.notifyParseStatementFailure();
   }
-  
+
   private bool parseCreateStatement() {
     if( this.ddl.consume("CREATE ") || this.ddl.consume("CREATE\n") ) {
-      string statement = this.ddl.consumeUpTo(";");
-      this.ddl.consume(";");
-      this.statements.Add(new CreateStatement() { Body = statement });
-      return true;
+      return this.parseCreateDatabaseStatement()
+          || this.parseCreateTablespaceStatement()
+          || this.parseCreateTableStatement()
+          || this.parseCreateIndexStatement()
+          || this.parseCreateViewStatement()
+          || this.notifyParseCreateStatementFailure();
     }
     return false;
+  }
+
+  private bool parseCreateDatabaseStatement() {
+    if( this.ddl.consume("DATABASE ") || this.ddl.consume("DATABASE\n") ) {
+      string name = this.ddl.consumeId();
+      if( name.Length > 0 ) {
+        Dictionary<string,string> parameters = this.ddl.consumeDictionary();
+        this.statements.Add(
+          new CreateDatabaseStatement() { Name = name, Parameters = parameters }
+        );
+
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private bool parseCreateTablespaceStatement() {
+    string statement = this.ddl.consumeUpTo(";");
+    this.ddl.consume(";");
+    this.statements.Add(new CreateStatement() { Body = statement });
+    return true;
+  }
+
+  private bool parseCreateTableStatement() {
+    string statement = this.ddl.consumeUpTo(";");
+    this.ddl.consume(";");
+    this.statements.Add(new CreateStatement() { Body = statement });
+    return true;
+  }
+
+  private bool parseCreateIndexStatement() {
+    string statement = this.ddl.consumeUpTo(";");
+    this.ddl.consume(";");
+    this.statements.Add(new CreateStatement() { Body = statement });
+    return true;
+  }
+
+  private bool parseCreateViewStatement() {
+    string statement = this.ddl.consumeUpTo(";");
+    this.ddl.consume(";");
+    this.statements.Add(new CreateStatement() { Body = statement });
+    return true;
   }
 
   private bool parseAlterStatement() {
@@ -179,6 +256,11 @@ public class DDL {
     return false;
   }
   
+  private bool notifyParseCreateStatementFailure() {
+    Console.WriteLine("Failed to parse Create Statement!");
+    return false;
+  }
+
   private bool notifyParseStatementFailure() {
     Console.WriteLine("Failed to parse Statement!");
     return false;
