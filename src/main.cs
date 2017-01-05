@@ -68,6 +68,14 @@ public class DDL {
 
   private List<Statement> statements = new List<Statement>  {};
   
+  public int Length {
+    get { return this.statements.Count; }
+  }
+
+  public Statement this[int key] {
+      get { return this.statements[key]; }
+  }
+
   public DDL() {}
   
   /*
