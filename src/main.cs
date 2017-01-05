@@ -7,18 +7,35 @@ using System.Text.RegularExpressions;
 
 using System.Linq;
 
+using System.Diagnostics;
+
 public class DDL {
 
-  private class Statement {
+  private abstract class Statement {
     public string Body { get; set; }
-    public override string ToString() {
-      return "STATEMENT " + this.Body;
-    }
   }
   
   private class Comment : Statement {
     public override string ToString() {
-      return "COMMENT   " + this.Body;
+      return "comment   " + this.Body;
+    }
+  }
+
+  private class CreateStatement : Statement {
+    public override string ToString() {
+      return "create    " + this.Body;
+    }
+  }
+
+  private class AlterStatement : Statement {
+    public override string ToString() {
+      return "alter     " + this.Body;
+    }
+  }
+
+  private class SetStatement : Statement {
+    public override string ToString() {
+      return "set       " + this.Body;
     }
   }
 
@@ -39,77 +56,85 @@ public class DDL {
     passed to a Statement.
 
   */
-
-  private Regex discardedCharacters   = new Regex( "\r"          );
-  private Regex repeatedWhitespace    = new Regex( "[ \t][ \t]*" );
-  private Regex leadingWhitespace     = new Regex( "^[\n \t]+"   );
-  private Regex trailingWhitespace    = new Regex( "[ \t]+$"     );
-  private Regex newlinesAndWhitespace = new Regex( "\n[ \t]*"    );
   
-  private string ddl = "";
+  private class Parsable {
+
+    // the parsable text
+    private string text = "";
+
+    // helper Regular Expressions for general clean-up
+    private static Regex discardedCharacters   = new Regex( "\r"          );
+    private static Regex repeatedWhitespace    = new Regex( "[ \t][ \t]*" );
+    private static Regex leadingWhitespace     = new Regex( "^[\n \t]+"   );
+    private static Regex trailingWhitespace    = new Regex( "[ \t]+$"     );
+    private static Regex newlinesAndWhitespace = new Regex( "\n[ \t]*"    );
+
+    // trim leading and trailing whitespace
+    // also replace new-line characters and optionally addition whitespace
+    private string trim(string text) {
+      text = Parsable.leadingWhitespace    .Replace(text, "");
+      text = Parsable.trailingWhitespace   .Replace(text, "");
+      text = Parsable.newlinesAndWhitespace.Replace(text, " ");
+      return text;
+    }
     
-  // discard some character(sequences) in general
-  private void prepare() {
-    this.ddl = this.discardedCharacters  .Replace(this.ddl, ""  );
-    this.ddl = this.repeatedWhitespace   .Replace(this.ddl, " " );
-  }
+    public Parsable(string text) {
+      this.text = text;
+      this.text = Parsable.discardedCharacters  .Replace(this.text, ""  );
+      this.text = Parsable.repeatedWhitespace   .Replace(this.text, " " );
+    }
 
-  private void trimLeadingWhitespace() {
-    this.ddl = this.leadingWhitespace.Replace(this.ddl, "");
-  }
+    public bool empty { get { return this.text.Length == 0; } }
 
-  // trim leading and trailing whitespace
-  // also replace new-line characters and optionally addition whitespace
-  private string trim(string text) {
-    text = this.leadingWhitespace    .Replace(text, "");
-    text = this.trailingWhitespace   .Replace(text, "");
-    text = this.newlinesAndWhitespace.Replace(text, " ");
-    return text;
-  }
-  
-  private bool done { get { return this.ddl.Length == 0; } }
+    public void trimLeadingWhitespace() {
+      this.text = Parsable.leadingWhitespace.Replace(this.text, "");
+    }
 
-  public void parse(String ddl) {
-    this.ddl = ddl;
-
-    this.prepare();
-
-    while(! this.done ) {
-      this.trimLeadingWhitespace();
-
-      // Console.WriteLine(new String('-', 75));
-      // Console.WriteLine(
-      //   "Parsing: " + this.ddl.Length + " " +
-      //   '"' + this.ddl.Substring(0, 50) + '"'
-      // );
-
-      if( ! this.parseComment() ) {
-        this.parseStatement();
+    public bool consume(string text) {
+      if(this.text.StartsWith(text)) {
+        return this.consume(text.Length) == this.trim(text);
       }
+      return false;
+    }
+  
+    public string consumeUpTo(string text) {
+      return this.consume(this.text.IndexOf(text));
+    }
 
+    private string consume(int length) {
+      string consumed = this.text.Substring(0, length);
+      this.text = this.text.Substring(length);
+      return this.trim(consumed);
     }
-  }
-  
-  private string consume(int length) {
-    string consumed = this.ddl.Substring(0, length);
-    this.ddl = this.ddl.Substring(length);
-    return consumed;
-  }
-  
-  private string consume(string text) {
-    if(this.ddl.StartsWith(text)) {
-      return this.consume(text.Length);
+    
+    public string peek(int length) {
+      return this.text.Substring(0, length);
     }
-    return null;
+    
+    public int Length { get { return this.text.Length; } }
   }
-  
-  private string consumeUpTo(string text) {
-    return this.consume(this.ddl.IndexOf(text));
+    
+  private Parsable ddl;
+      
+  public bool parse(String ddl) {
+    this.ddl = new Parsable(ddl);
+
+    while(! this.ddl.empty ) {
+      this.ddl.trimLeadingWhitespace();
+
+      this.showParsingInfo();
+
+      if(! ( this.parseComment() || this.parseStatement() ) ) {
+        return this.notifyParseFailure();
+      }
+    }
+
+    return true;
   }
 
   private bool parseComment() {
-    if( this.consume("--") == "--" ) {
-      string comment = this.trim(this.consumeUpTo("\n"));
+    if( this.ddl.consume("--") ) {
+      string comment = this.ddl.consumeUpTo("\n");
       this.statements.Add(new Comment() { Body = comment });
       return true;
     }
@@ -117,16 +142,70 @@ public class DDL {
   }
 
   private bool parseStatement() {
-    string statement = this.trim(this.consumeUpTo(";"));
-    this.consume(";");
-    this.statements.Add(new Statement() { Body = statement });
-    return true;
+    return this.parseCreateStatement()
+        || this.parseAlterStatement()
+        || this.parseSetStatement()
+
+        || this.notifyParseStatementFailure();
   }
   
+  private bool parseCreateStatement() {
+    if( this.ddl.consume("CREATE ") || this.ddl.consume("CREATE\n") ) {
+      string statement = this.ddl.consumeUpTo(";");
+      this.ddl.consume(";");
+      this.statements.Add(new CreateStatement() { Body = statement });
+      return true;
+    }
+    return false;
+  }
+
+  private bool parseAlterStatement() {
+    if( this.ddl.consume("ALTER ") || this.ddl.consume("ALTER\n") ) {
+      string statement = this.ddl.consumeUpTo(";");
+      this.ddl.consume(";");
+      this.statements.Add(new AlterStatement() { Body = statement });
+      return true;
+    }
+    return false;
+  }
+
+  private bool parseSetStatement() {
+    if( this.ddl.consume("SET ") || this.ddl.consume("SET\n") ) {
+      string statement = this.ddl.consumeUpTo(";");
+      this.ddl.consume(";");
+      this.statements.Add(new SetStatement() { Body = statement });
+      return true;
+    }
+    return false;
+  }
+  
+  private bool notifyParseStatementFailure() {
+    Console.WriteLine("Failed to parse Statement!");
+    return false;
+  }
+  
+  private bool notifyParseFailure() {
+    Console.WriteLine("Failed to parse DDL! Aborting..");
+    Console.WriteLine(this.ddl.peek(75));
+    return false;
+  }
+
   public void dump() {
-    foreach(Statement statement in this.statements) {
+    var statements = from statement in this.statements
+                     where !(statement is Comment)
+                     select statement;
+                       
+    foreach(var statement in statements) {
       Console.WriteLine(statement);
     }
+  }
+
+  [ConditionalAttribute("DEBUG")]
+  private void showParsingInfo() {
+    Console.WriteLine(new String('-', 75));
+    Console.WriteLine(this.ddl.Length + " bytes remaining:");
+    Console.WriteLine(this.ddl.peek(50) + " [...]");
+    Console.WriteLine(new String('-', 75));
   }
 
 }
