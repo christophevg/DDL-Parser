@@ -38,6 +38,22 @@ public class DDL {
     }
   }
 
+  private class CreateTablespaceStatement : Statement {
+    public string Name { get; set; }
+    public string Database { get; set; }
+    public string StorageGroup { get; set; }
+    public Dictionary<string,string> Parameters { get; set; } =
+      new Dictionary<string,string>();
+    public override string ToString() {
+      return "tablespace(" + this.Name +
+        " in " + this.Database +
+        " using " + this.StorageGroup + ")" + "{" +
+        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+        "}";
+    }
+  }
+
+
   private class AlterStatement : Statement {
     public override string ToString() {
       return "alter     " + this.Body;
@@ -74,19 +90,21 @@ public class DDL {
     private string text = "";
 
     // helper Regular Expressions for general clean-up
-    private static Regex discardedCharacters   = new Regex( "\r"           );
-    private static Regex repeatedWhitespace    = new Regex( "[ \t][ \t]*"  );
-    private static Regex leadingWhitespace     = new Regex( "^[\n \t]+"    );
-    private static Regex trailingWhitespace    = new Regex( "[ \t]+$"      );
-    private static Regex newlinesAndWhitespace = new Regex( "\n[ \t]*"     );
-    private static Regex nextId                = new Regex( "^[A-Z0-1]+"      );
+    private static Regex discardedCharacters    = new Regex( "\r"           );
+    private static Regex repeatedWhitespace     = new Regex( "[ \t][ \t]*"  );
+
+    private static Regex leadingWhitespace      = new Regex( "^\\s+"        );
+    private static Regex trailingWhitespace     = new Regex( "\\s+$"        );
+    private static Regex newlinesWithWhitespace = new Regex( "\n[ \t]*"     );
+
+    private static Regex nextId                 = new Regex( "^([A-Z0-9]+)" );
 
     // trim leading and trailing whitespace
     // also replace new-line characters and optionally addition whitespace
     private string trim(string text) {
       text = Parsable.leadingWhitespace    .Replace(text, "");
       text = Parsable.trailingWhitespace   .Replace(text, "");
-      text = Parsable.newlinesAndWhitespace.Replace(text, " ");
+      text = Parsable.newlinesWithWhitespace.Replace(text, " ");
       return text;
     }
     
@@ -98,11 +116,16 @@ public class DDL {
 
     public bool empty { get { return this.text.Length == 0; } }
 
-    public void trimLeadingWhitespace() {
+    public void skipLeadingWhitespace() {
+      this.text = Parsable.leadingWhitespace.Replace(this.text, "");
+    }
+    
+    public void skipEmptyLines() {
       this.text = Parsable.leadingWhitespace.Replace(this.text, "");
     }
 
     public bool consume(string text) {
+      this.text = Parsable.leadingWhitespace.Replace(this.text, "");
       if(this.text.StartsWith(text)) {
         return this.consume(text.Length) == this.trim(text);
       }
@@ -120,7 +143,7 @@ public class DDL {
     }
 
     public string consumeId() {
-      this.trimLeadingWhitespace();
+      this.skipLeadingWhitespace();
       Match m = Parsable.nextId.Match(this.text);
       if(m.Success) {
         int length = m.Groups[0].Captures[0].ToString().Length;
@@ -138,7 +161,7 @@ public class DDL {
       }
       return dict;
     }
-    
+
     public string peek(int length) {
       return this.text.Substring(0, length);
     }
@@ -152,8 +175,6 @@ public class DDL {
     this.ddl = new Parsable(ddl);
 
     while(! this.ddl.empty ) {
-      this.ddl.trimLeadingWhitespace();
-
       this.showParsingInfo();
 
       if(! ( this.parseComment() || this.parseStatement() ) ) {
@@ -166,8 +187,9 @@ public class DDL {
 
   private bool parseComment() {
     if( this.ddl.consume("--") ) {
-      string comment = this.ddl.consumeUpTo("\n");
-      this.statements.Add(new Comment() { Body = comment });
+      Comment stmt = new Comment() { Body = this.ddl.consumeUpTo("\n") };
+      this.ddl.consume("\n");
+      this.statements.Add(stmt);
       return true;
     }
     return false;
@@ -198,10 +220,11 @@ public class DDL {
       string name = this.ddl.consumeId();
       if( name.Length > 0 ) {
         Dictionary<string,string> parameters = this.ddl.consumeDictionary();
-        this.statements.Add(
-          new CreateDatabaseStatement() { Name = name, Parameters = parameters }
-        );
-
+        CreateDatabaseStatement stmt = new CreateDatabaseStatement() {
+          Name       = name,
+          Parameters = parameters
+        };
+        this.statements.Add(stmt);
         return true;
       }
     }
@@ -209,10 +232,28 @@ public class DDL {
   }
 
   private bool parseCreateTablespaceStatement() {
-    string statement = this.ddl.consumeUpTo(";");
-    this.ddl.consume(";");
-    this.statements.Add(new CreateStatement() { Body = statement });
-    return true;
+    if( this.ddl.consume("TABLESPACE ") || this.ddl.consume("TABLESPACE\n") ) {
+      string name = this.ddl.consumeId();
+      if( ! (name.Length > 0)                  ) { return false; }
+      if( ! this.ddl.consume("IN")             ) { return false; }
+      string database = this.ddl.consumeId();
+      if( ! (database.Length > 0)              ) { return false; }
+      if( ! this.ddl.consume("USING STOGROUP") ) { return false; }
+      string storageGroup = this.ddl.consumeId();
+      if( ! (storageGroup.Length > 0)          ) { return false; }
+      this.showParsingInfo();
+      Dictionary<string,string> parameters = this.ddl.consumeDictionary();
+      CreateTablespaceStatement stmt = 
+        new CreateTablespaceStatement() {
+          Name         = name,
+          Database     = database,
+          StorageGroup = storageGroup,
+          Parameters   = parameters
+        };
+      this.statements.Add(stmt);
+      return true;
+    }
+    return false;
   }
 
   private bool parseCreateTableStatement() {
@@ -290,6 +331,10 @@ public class DDL {
     Console.WriteLine(new String('-', 75));
   }
 
+  [ConditionalAttribute("DEBUG")]
+  private void log(string msg) {
+    Console.WriteLine("!!! " + msg);
+  }
 }
 
 public class Program {
