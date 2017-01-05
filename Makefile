@@ -10,9 +10,9 @@ NUNIT       = nunit-console -nologo
 
 all: run
 
-$(BUILD)/%.exe: src/%.cs
+$(BUILD)/%.exe: src/*.cs
 	@mkdir -p $(BUILD)
-	@$(CC) $(CFLAGS) -out:$@ $<
+	@$(CC) $(CFLAGS) -out:$@ $^
 
 run: $(BUILD)/$(TARGET).exe
 	@$(RUN) $< $(ARGUMENTS)
