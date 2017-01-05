@@ -19,7 +19,7 @@ run: $(BUILD)/$(TARGET).exe
 
 $(BUILD)/%.dll: test/%.cs src/*.cs
 	@mkdir -p $(BUILD)
-	@$(CC) -t:library -r:nunit.framework.dll -out:$@ $^
+	@$(CC) $(CFLAGS) -t:library -r:nunit.framework.dll -out:$@ $^
 
 test: $(BUILD)/$(TARGET).dll
 	@$(NUNIT) $<
