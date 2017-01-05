@@ -171,7 +171,7 @@ public class DDL {
     }
 
     public string peek(int length) {
-      return this.text.Substring(0, length);
+      return this.text.Substring(0, Math.Min(length, this.text.Length));
     }
     
     public int Length { get { return this.text.Length; } }
