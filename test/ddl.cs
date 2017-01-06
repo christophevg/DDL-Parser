@@ -93,4 +93,14 @@ public class DDLTest {
       "index(Index1 on Table1[Field1 ASC]){USING_STOGROUP=Group1,PARAM1=param1,UNIQUE=True}"
     );
   }
+
+  [Test]
+  public void testCreateViewStatement() {
+    this.parseAndCompare(
+      @"     CREATE
+        VIEW Index1
+          AS SELECT * FROM Table1;",
+      "view(Index1)[SELECT * FROM Table1]"
+    );
+  }
 }

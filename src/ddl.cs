@@ -240,9 +240,16 @@ public class DDL {
   }
 
   private bool ParseCreateViewStatement() {
-    string statement = this.ddl.ConsumeUpTo(";");
-    this.ddl.Consume(";");
-    this.statements.Add(new CreateStatement() { Body = statement });
+    if( ! this.ddl.Consume("VIEW") ) { return false; }
+    string name = this.ddl.ConsumeId();
+    if( name == null )               { return false; }
+    if( ! this.ddl.Consume("AS") ) { return false; }
+    string definition = this.ddl.ConsumeUpTo(";");
+    if( ! this.ddl.Consume(";") )    { return false; }
+    this.statements.Add( new CreateViewStatement() {
+      Name = name,
+      Definition = definition
+    });
     return true;
   }
 
