@@ -86,10 +86,11 @@ public class Parsable {
   }
 
   // consumes key value pairs into a dictionary
-  public Dictionary<string,string> ConsumeDictionary(string upTo        = ";",
-                                                     char   separator   = ' ',
-                                                     char   merger      = '_',
-                                                     List<string> merge = null )
+  public Dictionary<string,string> ConsumeDictionary(string upTo          = ";",
+                                                     char   separator     = ' ',
+                                                     char   merger        = '_',
+                                                     List<string> merge   = null,
+                                                     List<string> options = null )
   {
     string part = this.Trim(this.ConsumeUpTo(upTo));
 
@@ -104,6 +105,13 @@ public class Parsable {
 
     // pre-process DDL, substituting "WITH PARAM" to "PARAM True"
     part = Parsable.withParameter.Replace(part, "$1 True");
+
+    // extend single keyword switches
+    if( options != null ) {
+      foreach( var option in options ) {
+        part = part.Replace(option, option + " True" );
+      }
+    }
 
     List<string> mappings = new List<string>(part.Split(separator));
     this.Consume(upTo);
