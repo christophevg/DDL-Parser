@@ -112,7 +112,10 @@ public class Parsable {
     // extend single keyword switches
     if( options != null ) {
       foreach( var option in options ) {
-        part = part.Replace(option, option + " True" );
+        // don't convert already converted NOT OPTIONs
+        if( ! part.Contains( option + " False" ) ) {
+          part = part.Replace(option, option + " True" );
+        }
       }
     }
 
@@ -125,7 +128,8 @@ public class Parsable {
     int pairs = mappings.Count - (mappings.Count % 2);
     for(int i=0; i<pairs; i+=2) {
       string value = this.Trim(mappings[i+1]);
-      if(value == "NO") { value = "False"; }
+      if(value == "NO" ) { value = "False"; }
+      if(value == "YES") { value = "True";  }
       dict[this.Trim(mappings[i])] = value;
     }
     return dict;
