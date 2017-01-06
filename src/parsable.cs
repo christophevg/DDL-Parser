@@ -27,6 +27,9 @@ public class Parsable {
   // we also accept "hierarchical IDs", e.g. "namespace.table"
   private static Regex nextId                 = new Regex( "^([\\w\\.]+)" );
 
+  // matching of negated parameters, e.g. "NOT VOLATILE"
+  private static Regex notParameter           = new Regex( "NOT (\\w+)"   );
+
   public Parsable(string text) {
     this.text = text;
     this.text = Parsable.discardedCharacters  .Replace(this.text, ""  );
@@ -79,6 +82,9 @@ public class Parsable {
         part = part.Replace(key, key.Replace(separator, merger));
       }
     }
+    // pre-process DDL, substituting "NOT PARAM" to "PARAM False"
+    part = Parsable.notParameter.Replace(part, "$1 False");
+
     List<string> mappings = new List<string>(part.Split(separator));
     this.Consume(upTo);
     Dictionary<string,string> dict = new Dictionary<string,string>();
