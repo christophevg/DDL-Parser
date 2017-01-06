@@ -90,7 +90,9 @@ public class Parsable {
     Dictionary<string,string> dict = new Dictionary<string,string>();
     int pairs = mappings.Count - (mappings.Count % 2);
     for(int i=0; i<pairs; i+=2) {
-      dict[this.Trim(mappings[i])] = this.Trim(mappings[i+1]);
+      string value = this.Trim(mappings[i+1]);
+      if(value == "NO") { value = "False"; }
+      dict[this.Trim(mappings[i])] = value;
     }
     return dict;
   }
