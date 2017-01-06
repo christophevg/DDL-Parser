@@ -88,15 +88,14 @@ public class DDL {
   private bool parseCreateDatabaseStatement() {
     if( this.ddl.Consume("DATABASE ") || this.ddl.Consume("DATABASE\n") ) {
       string name = this.ddl.ConsumeId();
-      if( name.Length > 0 ) {
-        Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
-        CreateDatabaseStatement stmt = new CreateDatabaseStatement() {
-          Name       = name,
-          Parameters = parameters
-        };
-        this.statements.Add(stmt);
-        return true;
-      }
+      if( name == null ) { return false; }
+      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
+      CreateDatabaseStatement stmt = new CreateDatabaseStatement() {
+        Name       = name,
+        Parameters = parameters
+      };
+      this.statements.Add(stmt);
+      return true;
     }
     return false;
   }
@@ -104,13 +103,13 @@ public class DDL {
   private bool parseCreateTablespaceStatement() {
     if( this.ddl.Consume("TABLESPACE ") || this.ddl.Consume("TABLESPACE\n") ) {
       string name = this.ddl.ConsumeId();
-      if( ! (name.Length > 0)                  ) { return false; }
+      if( name == null                         ) { return false; }
       if( ! this.ddl.Consume("IN")             ) { return false; }
       string database = this.ddl.ConsumeId();
-      if( ! (database.Length > 0)              ) { return false; }
+      if( database == null                     ) { return false; }
       if( ! this.ddl.Consume("USING STOGROUP") ) { return false; }
       string storageGroup = this.ddl.ConsumeId();
-      if( ! (storageGroup.Length > 0)          ) { return false; }
+      if( storageGroup == null                 ) { return false; }
       this.showParsingInfo();
       Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
       CreateTablespaceStatement stmt = 
