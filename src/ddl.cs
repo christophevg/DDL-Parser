@@ -128,11 +128,92 @@ public class DDL {
     return false;
   }
 
+  // the currently being parsed field and constraint lists
+  private List<Field>      fields      = new List<Field>();
+  private List<Constraint> constraints = new List<Constraint>();
+
   private bool ParseCreateTableStatement() {
-    string statement = this.ddl.ConsumeUpTo(";");
-    this.ddl.Consume(";");
-    this.statements.Add(new CreateStatement() { Body = statement });
+    if( this.ddl.Consume("TABLE ") || this.ddl.Consume("TABLE\n") ) {
+      string name = this.ddl.ConsumeId();
+      if( name == null             ) { return false; }
+
+      if( ! this.ddl.Consume("(")  ) { return false; }
+
+      this.fields      = new List<Field>();
+      this.constraints = new List<Constraint>();
+      
+      while( this.ParseConstraint() || this.ParseField() ) {}
+
+      if( ! this.ddl.Consume(")")  ) { return false; }
+
+      if( ! this.ddl.Consume("IN") ) { return false; }
+      string database = this.ddl.ConsumeId();
+      if( database == null         ) { return false; }
+      List<string> keys = new List<string>() { "DATA CAPTURE" };
+      Dictionary<string,string> parameters =
+        this.ddl.ConsumeDictionary(merge: keys);      
+      CreateTableStatement stmt = 
+        new CreateTableStatement() {
+          Name        = name,
+          Fields      = this.fields,
+          Constraints = this.constraints,
+          Database    = database,
+          Parameters  = parameters
+        };
+      this.statements.Add(stmt);
+      return true;
+    }
+    return false;
+  }
+
+  private bool ParseField() {
+    string name = this.ddl.ConsumeId();
+    if( name == null ) { return false; }
+    string type = this.ParseType();
+    if( type == null ) { return false; }
+    Dictionary<string,string> parameters =
+      this.ddl.ConsumeDictionary(upTo: ",", merge: new List<string> { "SBCS DATA" });
+    this.fields.Add(new Field() {
+      Name       = name,
+      Type       = type,
+      Parameters = parameters
+    });
     return true;
+  }
+
+  private bool ParseConstraint() {
+    if( ! this.ddl.Consume("CONSTRAINT") ) { return false; }
+    string name = this.ddl.ConsumeId();
+    if( name == null )                     { return false; }
+
+    return this.ParsePrimaryKeyConstraint(name);
+  }
+
+  private bool ParsePrimaryKeyConstraint(string name) {
+    if( this.ddl.Consume("PRIMARY KEY") ) {
+      if( ! this.ddl.Consume("(") ) { return false; }
+      string fields = this.ddl.ConsumeUpTo(")");
+      if( ! this.ddl.Consume(")") ) { return false; }
+      this.constraints.Add(new Constraint() {
+        Name       = name,
+        Parameters = new Dictionary<string,string>() {
+          { "PRIMARY_KEY", fields }
+        }
+      });
+      return true;
+    }
+    return false;
+  }
+
+  private string ParseType() {
+    string type = this.ddl.ConsumeId();
+    if( type == null )              { return null; }
+    // optional parameter
+    if( this.ddl.Consume("(") ) {
+      type += "(" + this.ddl.ConsumeNumber() + ")";
+      if( ! this.ddl.Consume(")") ) { return null; }
+    }
+    return type;
   }
 
   private bool ParseCreateIndexStatement() {
