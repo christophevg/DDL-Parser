@@ -37,7 +37,7 @@ public class Parsable {
   private static Regex withParameter          = new Regex( "WITH (\\w+)"   );
 
   // rewriting of unit-enabled values
-  private static Regex withUnit               = new Regex( "([0-9]+) ([KMG])");
+  private static Regex withUnit               = new Regex( "([0-9]+) ([KMG]\\s)");
 
   public Parsable(string text) {
     this.text = text;

@@ -108,9 +108,9 @@ public class ParsableTest {
         }
     );
     Assert.AreEqual(
-      new Parsable("p1 v1 p2 2 G p3 v3;").ConsumeDictionary(),
+      new Parsable("p1 1 Mp2 2 G p3 v3;").ConsumeDictionary(),
         new Dictionary<string,string>() {
-          { "p1", "v1" }, { "p2", "2G" }, { "p3", "v3" }
+          { "p1", "1" }, { "Mp2", "2G" }, { "p3", "v3" }
         }
     );
   }
