@@ -44,6 +44,7 @@ public class ParsableTest {
   public void testConsumeId() {
     Assert.AreEqual(new Parsable("   123 456;789").ConsumeId(), "123");
     Assert.IsNull  (new Parsable("  @123 456;789").ConsumeId());
+    Assert.AreEqual(new Parsable("   123.456;789").ConsumeId(), "123.456");
   }
   
   [Test]

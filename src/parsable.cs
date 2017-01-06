@@ -17,14 +17,15 @@ public class Parsable {
   private string text = "";
 
   // helper Regular Expressions for general clean-up
-  private static Regex discardedCharacters    = new Regex( "\r"              );
-  private static Regex repeatedWhitespace     = new Regex( "[ \t][ \t]*"     );
+  private static Regex discardedCharacters    = new Regex( "\r"           );
+  private static Regex repeatedWhitespace     = new Regex( "[ \t][ \t]*"  );
 
-  private static Regex leadingWhitespace      = new Regex( "^\\s+"           );
-  private static Regex trailingWhitespace     = new Regex( "\\s+$"           );
-  private static Regex newlinesWithWhitespace = new Regex( "\n[ \t]*"        );
+  private static Regex leadingWhitespace      = new Regex( "^\\s+"        );
+  private static Regex trailingWhitespace     = new Regex( "\\s+$"        );
+  private static Regex newlinesWithWhitespace = new Regex( "\n[ \t]*"     );
 
-  private static Regex nextId                 = new Regex( "^([A-Z0-9]+)\\s" );
+  // we also accept "hierarchical IDs", e.g. "namespace.table"
+  private static Regex nextId                 = new Regex( "^([\\w\\.]+)" );
 
   public Parsable(string text) {
     this.text = text;
