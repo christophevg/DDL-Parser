@@ -26,11 +26,10 @@ public class StatementsTest {
     Assert.AreEqual(new CreateTablespaceStatement() {
       Name         = "123",
       Database     = "456",
-      StorageGroup = "789",
       Parameters   = new Dictionary<string,string>() {
         { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
       }
-    }.ToString(), "tablespace(123 in 456 using 789){p1=v1,p2=v2,p3=v3}");
+    }.ToString(), "tablespace(123 in 456){p1=v1,p2=v2,p3=v3}");
   }
 
   [Test]

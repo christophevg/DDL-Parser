@@ -36,14 +36,14 @@ public class CreateDatabaseStatement : Statement {
 public class CreateTablespaceStatement : Statement {
   public string Name { get; set; }
   public string Database { get; set; }
-  public string StorageGroup { get; set; }
   public Dictionary<string,string> Parameters { get; set; } =
     new Dictionary<string,string>();
   public override string ToString() {
     return "tablespace(" + this.Name +
       " in " + this.Database +
-      " using " + this.StorageGroup + ")" + "{" +
-      string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+      ")" +
+      "{" +
+        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
       "}";
   }
 }

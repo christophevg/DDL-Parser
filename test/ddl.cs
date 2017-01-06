@@ -51,7 +51,7 @@ public class DDLTest {
           PARAM1 param1
             PARAM2 param2;
 ",
-      "tablespace(TEST001 in TEST002 using TEST003){PARAM1=param1,PARAM2=param2}"
+      "tablespace(TEST001 in TEST002){USING_STOGROUP=TEST003,PARAM1=param1,PARAM2=param2}"
     );
   }
 

@@ -111,15 +111,12 @@ public class DDL {
       if( ! this.ddl.Consume("IN")             ) { return false; }
       string database = this.ddl.ConsumeId();
       if( database == null                     ) { return false; }
-      if( ! this.ddl.Consume("USING STOGROUP") ) { return false; }
-      string storageGroup = this.ddl.ConsumeId();
-      if( storageGroup == null                 ) { return false; }
-      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
+      Dictionary<string,string> parameters = 
+        this.ddl.ConsumeDictionary(merge: new List<string>() { "USING STOGROUP" });
       CreateTablespaceStatement stmt = 
         new CreateTablespaceStatement() {
           Name         = name,
           Database     = database,
-          StorageGroup = storageGroup,
           Parameters   = parameters
         };
       this.statements.Add(stmt);
