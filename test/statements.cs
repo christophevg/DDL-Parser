@@ -82,4 +82,17 @@ public class StatementsTest {
       "table(Table1 in Database1)[Field1:Type1{p1=v1,p2=v2,p3=v3},Field2:Type2{p4=v4}]<Constraint1{p1=v1,p2=v2,p3=v3}>{p1=v1}"
     );
   }
+
+  [Test]
+  public void testCreateIndexStatement() {
+    Assert.AreEqual(new CreateIndexStatement() {
+      Name = "Index1",
+      Table = "Table1",
+      Fields = "F1,F2,F3",
+      Parameters = new Dictionary<string,string>() {
+        { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
+      }
+    }.ToString(),
+    "index(Index1 on Table1[F1,F2,F3]){p1=v1,p2=v2,p3=v3}");
+  }
 }

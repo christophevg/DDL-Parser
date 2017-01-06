@@ -95,6 +95,22 @@ public class CreateTableStatement : Statement {
   }
 }
 
+public class CreateIndexStatement : Statement {
+  public string Name   { get; set; }
+  public string Table  { get; set; }
+  public string Fields { get; set; }
+  public Dictionary<string,string> Parameters { get; set; } =
+    new Dictionary<string,string>();
+  public override string ToString() {
+    return "index(" +  this.Name +
+      " on " + this.Table + "[" + this.Fields + "]" +
+      ")" +
+      "{" +
+        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+      "}";
+  }
+}
+
 // TODO make abstract
 public class AlterStatement : Statement {
   public override string ToString() {
