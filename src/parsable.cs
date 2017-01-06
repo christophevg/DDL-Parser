@@ -25,7 +25,7 @@ public class Parsable {
   private static Regex newlinesWithWhitespace = new Regex( "\n[ \t]*"     );
 
   // we also accept "hierarchical IDs", e.g. "namespace.table"
-  private static Regex nextId                 = new Regex( "^([\\w\\.]+)" );
+  private static Regex identifier             = new Regex( "^([\\w\\.]+)" );
 
   // matching of negated parameters, e.g. "NOT VOLATILE"
   private static Regex notParameter           = new Regex( "NOT (\\w+)"   );
@@ -60,7 +60,7 @@ public class Parsable {
   // consumes an ID, returning it or null in case of failure
   public string ConsumeId() {
     this.SkipLeadingWhitespace();
-    Match m = Parsable.nextId.Match(this.text);
+    Match m = Parsable.identifier.Match(this.text);
     if(m.Success) {
       int length = m.Groups[0].Captures[0].ToString().Length;
       return this.Consume(length);
