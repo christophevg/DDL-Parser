@@ -60,9 +60,9 @@ public class DDLTest {
     this.parseAndCompare(
       @"     CREATE TABLE
        TEST.001  (
-         F1 T1(123) NOT NULL FOR SBCS DATA,
-         F2 T2      NOT NULL,
-         F3 T3      FOR SBCS DATA,
+         F1 T1(123)  NOT NULL FOR SBCS DATA,
+         F2 T2(4, 5) NOT NULL,
+         F3 T3       FOR SBCS DATA,
          F4 T4,
          CONSTRAINT PK_TEST PRIMARY KEY ( F4 )
        )
@@ -73,7 +73,7 @@ public class DDLTest {
             PARAM3 NO;
 ",
       "table(TEST.001 in TEST.002)" +
-      "[F1:T1(123){NULL=False,FOR=SBCS_DATA},F2:T2{NULL=False},F3:T3{FOR=SBCS_DATA},F4:T4{}]" +
+      "[F1:T1(123){NULL=False,FOR=SBCS_DATA},F2:T2(4,5){NULL=False},F3:T3{FOR=SBCS_DATA},F4:T4{}]" +
       "<PK_TEST{PRIMARY_KEY=F4}>" +
       "{DATA_CAPTURE=CHANGES,PARAM1=param1,PARAM2=False,PARAM3=False}"
     );

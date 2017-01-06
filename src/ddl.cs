@@ -209,7 +209,12 @@ public class DDL {
     if( type == null )              { return null; }
     // optional parameter
     if( this.ddl.Consume("(") ) {
-      type += "(" + this.ddl.ConsumeNumber() + ")";
+      type += "(" + this.ddl.ConsumeNumber();
+      if( this.ddl.Consume(",") ) {
+        // second part to type number
+        type += "," + this.ddl.ConsumeNumber();
+      }
+      type += ")";
       if( ! this.ddl.Consume(")") ) { return null; }
     }
     return type;
