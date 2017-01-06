@@ -93,6 +93,12 @@ public class ParsableTest {
           { "p1", "v1" }, { "p2", "False" }, { "p3", "v3" }
         }
     );
+    Assert.AreEqual(
+      new Parsable("p1 v1 WITH p2 p3 v3;").ConsumeDictionary(),
+        new Dictionary<string,string>() {
+          { "p1", "v1" }, { "p2", "True" }, { "p3", "v3" }
+        }
+    );
   }
   
   [Test]

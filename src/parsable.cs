@@ -33,6 +33,9 @@ public class Parsable {
   // matching of negated parameters, e.g. "NOT VOLATILE"
   private static Regex notParameter           = new Regex( "NOT (\\w+)"   );
 
+  // matching of enabled parameters, e.g. "WITH DEFAULT"
+  private static Regex withParameter          = new Regex( "WITH (\\w+)"   );
+
   public Parsable(string text) {
     this.text = text;
     this.text = Parsable.discardedCharacters  .Replace(this.text, ""  );
@@ -98,6 +101,9 @@ public class Parsable {
     }
     // pre-process DDL, substituting "NOT PARAM" to "PARAM False"
     part = Parsable.notParameter.Replace(part, "$1 False");
+
+    // pre-process DDL, substituting "WITH PARAM" to "PARAM True"
+    part = Parsable.withParameter.Replace(part, "$1 True");
 
     List<string> mappings = new List<string>(part.Split(separator));
     this.Consume(upTo);
