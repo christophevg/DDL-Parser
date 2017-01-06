@@ -26,3 +26,5 @@ test: $(BUILD)/test.dll
 
 clean:
 	@rm -rf $(BUILD) TestResult.xml
+
+-include Makefile.local
