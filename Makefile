@@ -17,11 +17,11 @@ $(BUILD)/%.exe: src/*.cs
 run: $(BUILD)/$(TARGET).exe
 	@$(RUN) $< $(ARGUMENTS)
 
-$(BUILD)/%.dll: test/%.cs src/*.cs
+$(BUILD)/test.dll: test/*.cs src/*.cs
 	@mkdir -p $(BUILD)
 	@$(CC) $(CFLAGS) -t:library -r:nunit.framework.dll -out:$@ $^
 
-test: $(BUILD)/$(TARGET).dll
+test: $(BUILD)/test.dll
 	@$(NUNIT) $<
 
 clean:

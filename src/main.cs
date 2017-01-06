@@ -42,23 +42,23 @@ public class DDL {
   public bool parse(String ddl) {
     this.ddl = new Parsable(ddl);
 
-    while(! this.ddl.empty ) {
+    while( this.ddl.Length > 0 ) {
       this.showParsingInfo();
 
       if(! ( this.parseComment() || this.parseStatement() ) ) {
         return this.notifyParseFailure();
       }
 
-      this.ddl.skipLeadingWhitespace();
+      this.ddl.SkipLeadingWhitespace();
     }
 
     return true;
   }
 
   private bool parseComment() {
-    if( this.ddl.consume("--") ) {
-      Comment stmt = new Comment() { Body = this.ddl.consumeUpTo("\n") };
-      this.ddl.consume("\n");
+    if( this.ddl.Consume("--") ) {
+      Comment stmt = new Comment() { Body = this.ddl.ConsumeUpTo("\n") };
+      this.ddl.Consume("\n");
       this.statements.Add(stmt);
       return true;
     }
@@ -74,7 +74,7 @@ public class DDL {
   }
 
   private bool parseCreateStatement() {
-    if( this.ddl.consume("CREATE ") || this.ddl.consume("CREATE\n") ) {
+    if( this.ddl.Consume("CREATE ") || this.ddl.Consume("CREATE\n") ) {
       return this.parseCreateDatabaseStatement()
           || this.parseCreateTablespaceStatement()
           || this.parseCreateTableStatement()
@@ -86,10 +86,10 @@ public class DDL {
   }
 
   private bool parseCreateDatabaseStatement() {
-    if( this.ddl.consume("DATABASE ") || this.ddl.consume("DATABASE\n") ) {
-      string name = this.ddl.consumeId();
+    if( this.ddl.Consume("DATABASE ") || this.ddl.Consume("DATABASE\n") ) {
+      string name = this.ddl.ConsumeId();
       if( name.Length > 0 ) {
-        Dictionary<string,string> parameters = this.ddl.consumeDictionary();
+        Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
         CreateDatabaseStatement stmt = new CreateDatabaseStatement() {
           Name       = name,
           Parameters = parameters
@@ -102,17 +102,17 @@ public class DDL {
   }
 
   private bool parseCreateTablespaceStatement() {
-    if( this.ddl.consume("TABLESPACE ") || this.ddl.consume("TABLESPACE\n") ) {
-      string name = this.ddl.consumeId();
+    if( this.ddl.Consume("TABLESPACE ") || this.ddl.Consume("TABLESPACE\n") ) {
+      string name = this.ddl.ConsumeId();
       if( ! (name.Length > 0)                  ) { return false; }
-      if( ! this.ddl.consume("IN")             ) { return false; }
-      string database = this.ddl.consumeId();
+      if( ! this.ddl.Consume("IN")             ) { return false; }
+      string database = this.ddl.ConsumeId();
       if( ! (database.Length > 0)              ) { return false; }
-      if( ! this.ddl.consume("USING STOGROUP") ) { return false; }
-      string storageGroup = this.ddl.consumeId();
+      if( ! this.ddl.Consume("USING STOGROUP") ) { return false; }
+      string storageGroup = this.ddl.ConsumeId();
       if( ! (storageGroup.Length > 0)          ) { return false; }
       this.showParsingInfo();
-      Dictionary<string,string> parameters = this.ddl.consumeDictionary();
+      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
       CreateTablespaceStatement stmt = 
         new CreateTablespaceStatement() {
           Name         = name,
@@ -127,30 +127,30 @@ public class DDL {
   }
 
   private bool parseCreateTableStatement() {
-    string statement = this.ddl.consumeUpTo(";");
-    this.ddl.consume(";");
+    string statement = this.ddl.ConsumeUpTo(";");
+    this.ddl.Consume(";");
     this.statements.Add(new CreateStatement() { Body = statement });
     return true;
   }
 
   private bool parseCreateIndexStatement() {
-    string statement = this.ddl.consumeUpTo(";");
-    this.ddl.consume(";");
+    string statement = this.ddl.ConsumeUpTo(";");
+    this.ddl.Consume(";");
     this.statements.Add(new CreateStatement() { Body = statement });
     return true;
   }
 
   private bool parseCreateViewStatement() {
-    string statement = this.ddl.consumeUpTo(";");
-    this.ddl.consume(";");
+    string statement = this.ddl.ConsumeUpTo(";");
+    this.ddl.Consume(";");
     this.statements.Add(new CreateStatement() { Body = statement });
     return true;
   }
 
   private bool parseAlterStatement() {
-    if( this.ddl.consume("ALTER ") || this.ddl.consume("ALTER\n") ) {
-      string statement = this.ddl.consumeUpTo(";");
-      this.ddl.consume(";");
+    if( this.ddl.Consume("ALTER ") || this.ddl.Consume("ALTER\n") ) {
+      string statement = this.ddl.ConsumeUpTo(";");
+      this.ddl.Consume(";");
       this.statements.Add(new AlterStatement() { Body = statement });
       return true;
     }
@@ -158,9 +158,9 @@ public class DDL {
   }
 
   private bool parseSetStatement() {
-    if( this.ddl.consume("SET ") || this.ddl.consume("SET\n") ) {
-      string statement = this.ddl.consumeUpTo(";");
-      this.ddl.consume(";");
+    if( this.ddl.Consume("SET ") || this.ddl.Consume("SET\n") ) {
+      string statement = this.ddl.ConsumeUpTo(";");
+      this.ddl.Consume(";");
       this.statements.Add(new SetStatement() { Body = statement });
       return true;
     }
@@ -179,7 +179,7 @@ public class DDL {
   
   private bool notifyParseFailure() {
     Console.WriteLine("Failed to parse DDL! Aborting..");
-    Console.WriteLine(this.ddl.peek(75));
+    Console.WriteLine(this.ddl.Peek(75));
     return false;
   }
 
@@ -197,7 +197,7 @@ public class DDL {
   private void showParsingInfo() {
     Console.WriteLine(new String('-', 75));
     Console.WriteLine(this.ddl.Length + " bytes remaining:");
-    Console.WriteLine(this.ddl.peek(50) + " [...]");
+    Console.WriteLine(this.ddl.Peek(50) + " [...]");
     Console.WriteLine(new String('-', 75));
   }
 
