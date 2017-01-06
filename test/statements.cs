@@ -49,9 +49,9 @@ public class StatementsTest {
   [Test]
   public void testCreateTableStatement() {
     Assert.AreEqual(new CreateTableStatement() {
-      Name       = "Table1",
-      Database   = "Database1",
-      Fields     = new List<Field>() {
+      Name        = "Table1",
+      Database    = "Database1",
+      Fields      = new List<Field>() {
         new Field() {
           Name       = "Field1",
           Type       = "Type1",
@@ -67,11 +67,19 @@ public class StatementsTest {
           }
         }
       },
-      Parameters = new Dictionary<string,string>() {
+      Constraints = new List<Constraint>() {
+        new Constraint() {
+          Name       = "Constraint1",
+          Parameters = new Dictionary<string,string>() {
+            { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
+          }
+        }
+      },
+      Parameters  = new Dictionary<string,string>() {
         { "p1", "v1" }
       }
     }.ToString(),
-      "table(Table1 in Database1)[Field1:Type1{p1=v1,p2=v2,p3=v3},Field2:Type2{p4=v4}]{p1=v1}"
+      "table(Table1 in Database1)[Field1:Type1{p1=v1,p2=v2,p3=v3},Field2:Type2{p4=v4}]<Constraint1{p1=v1,p2=v2,p3=v3}>{p1=v1}"
     );
   }
 }

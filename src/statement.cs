@@ -61,10 +61,23 @@ public class Field {
   }
 }
 
+public class Constraint {
+  public string Name { get; set; }
+  public Dictionary<string,string> Parameters { get; set; } =
+    new Dictionary<string,string>();
+  public override string ToString() {
+    return this.Name +
+      "{" +
+        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+      "}";
+  }
+}
+
 public class CreateTableStatement : Statement {
   public string Name { get; set; }
   public string Database { get; set; }
   public List<Field> Fields { get; set; } = new List<Field>();
+  public List<Constraint> Constraints { get; set; } = new List<Constraint>();
   public Dictionary<string,string> Parameters { get; set; } =
     new Dictionary<string,string>();
   public override string ToString() {
@@ -73,6 +86,9 @@ public class CreateTableStatement : Statement {
       "["+
         string.Join(",", this.Fields) +
       "]"+
+      "<"+
+        string.Join(",", this.Constraints) +
+      ">"+
       "{" +
         string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
       "}";
