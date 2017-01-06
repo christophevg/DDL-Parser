@@ -1,3 +1,6 @@
+// Statements - simple class hierarchy to hold parsed statements
+// author: Christophe VG <contact@christophe.vg>
+
 using System.Collections.Generic;
 
 using System.Linq;
@@ -12,6 +15,7 @@ public class Comment : Statement {
   }
 }
 
+// TODO make abstract
 public class CreateStatement : Statement {
   public override string ToString() {
     return "create    " + this.Body;
@@ -45,12 +49,14 @@ public class CreateTablespaceStatement : Statement {
 }
 
 
+// TODO make abstract
 public class AlterStatement : Statement {
   public override string ToString() {
     return "alter     " + this.Body;
   }
 }
 
+// TODO make abstract
 public class SetStatement : Statement {
   public override string ToString() {
     return "set       " + this.Body;
