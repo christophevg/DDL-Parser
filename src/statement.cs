@@ -48,6 +48,36 @@ public class CreateTablespaceStatement : Statement {
   }
 }
 
+public class Field {
+  public string Name { get; set; }
+  public string Type { get; set; }
+  public Dictionary<string,string> Parameters { get; set; } =
+    new Dictionary<string,string>();
+  public override string ToString() {
+    return this.Name + ":" + this.Type +
+      "{" +
+        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+      "}";
+  }
+}
+
+public class CreateTableStatement : Statement {
+  public string Name { get; set; }
+  public string Database { get; set; }
+  public List<Field> Fields { get; set; } = new List<Field>();
+  public Dictionary<string,string> Parameters { get; set; } =
+    new Dictionary<string,string>();
+  public override string ToString() {
+    return "table(" + this.Name +
+      " in " + this.Database + ")" +
+      "["+
+        string.Join(",", this.Fields) +
+      "]"+
+      "{" +
+        string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+      "}";
+  }
+}
 
 // TODO make abstract
 public class AlterStatement : Statement {

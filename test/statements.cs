@@ -27,10 +27,51 @@ public class StatementsTest {
       Name         = "123",
       Database     = "456",
       StorageGroup = "789",
-      Parameters = new Dictionary<string,string>() {
+      Parameters   = new Dictionary<string,string>() {
         { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
       }
     }.ToString(), "tablespace(123 in 456 using 789){p1=v1,p2=v2,p3=v3}");
   }
 
+  [Test]
+  public void testField() {
+    Assert.AreEqual(new Field() {
+      Name       = "Field1",
+      Type       = "Type1",
+      Parameters = new Dictionary<string,string>() {
+        { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
+      }
+    }.ToString(),
+      "Field1:Type1{p1=v1,p2=v2,p3=v3}"
+    );
+  }
+
+  [Test]
+  public void testCreateTableStatement() {
+    Assert.AreEqual(new CreateTableStatement() {
+      Name       = "Table1",
+      Database   = "Database1",
+      Fields     = new List<Field>() {
+        new Field() {
+          Name       = "Field1",
+          Type       = "Type1",
+          Parameters = new Dictionary<string,string>() {
+            { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
+          }
+        },
+        new Field() {
+          Name       = "Field2",
+          Type       = "Type2",
+          Parameters = new Dictionary<string,string>() {
+            { "p4", "v4" }
+          }
+        }
+      },
+      Parameters = new Dictionary<string,string>() {
+        { "p1", "v1" }
+      }
+    }.ToString(),
+      "table(Table1 in Database1)[Field1:Type1{p1=v1,p2=v2,p3=v3},Field2:Type2{p4=v4}]{p1=v1}"
+    );
+  }
 }
