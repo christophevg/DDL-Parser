@@ -78,4 +78,19 @@ public class DDLTest {
       "{DATA_CAPTURE=CHANGES,PARAM1=param1,PARAM2=False,PARAM3=False}"
     );
   }
+
+  [Test]
+  public void testCreateIndexStatement() {
+    this.parseAndCompare(
+      @"     CREATE UNIQUE
+        INDEX Index1
+       ON Table1
+        (
+         Field1 ASC
+        )
+         USING STOGROUP Group1
+         PARAM1 param1;",
+      "index(Index1 on Table1[Field1 ASC]){USING_STOGROUP=Group1,PARAM1=param1,UNIQUE=True}"
+    );
+  }
 }

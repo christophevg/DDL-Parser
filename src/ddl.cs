@@ -111,8 +111,10 @@ public class DDL {
       if( ! this.ddl.Consume("IN")             ) { return false; }
       string database = this.ddl.ConsumeId();
       if( database == null                     ) { return false; }
-      Dictionary<string,string> parameters = 
-        this.ddl.ConsumeDictionary(merge: new List<string>() { "USING STOGROUP" });
+      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
+        merge:   new List<string>() { "USING STOGROUP" },
+        options: new List<string>() { "LOGGED"         }      
+      );
       CreateTablespaceStatement stmt = 
         new CreateTablespaceStatement() {
           Name         = name,
@@ -146,9 +148,9 @@ public class DDL {
       if( ! this.ddl.Consume("IN") ) { return false; }
       string database = this.ddl.ConsumeId();
       if( database == null         ) { return false; }
-      List<string> keys = new List<string>() { "DATA CAPTURE" };
-      Dictionary<string,string> parameters =
-        this.ddl.ConsumeDictionary(merge: keys);      
+      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
+        merge:   new List<string>() { "DATA CAPTURE" }
+      );
       CreateTableStatement stmt = 
         new CreateTableStatement() {
           Name        = name,
@@ -214,9 +216,26 @@ public class DDL {
   }
 
   private bool ParseCreateIndexStatement() {
-    string statement = this.ddl.ConsumeUpTo(";");
-    this.ddl.Consume(";");
-    this.statements.Add(new CreateStatement() { Body = statement });
+    bool unique = this.ddl.Consume("UNIQUE");
+    if( ! this.ddl.Consume("INDEX") ) { return false; }
+    string name = this.ddl.ConsumeId();
+    if( name == null )                { return false; }
+    if( ! this.ddl.Consume("ON") )    { return false; }
+    string table = this.ddl.ConsumeId();
+    if( ! this.ddl.Consume("(") )    { return false; }
+    string fields = this.ddl.ConsumeUpTo(")");
+    if( ! this.ddl.Consume(")") )    { return false; }
+    Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
+      merge:   new List<string>() { "USING STOGROUP" },
+      options: new List<string>() { "CLUSTER"        }
+    );
+    parameters.Add("UNIQUE", unique.ToString());
+    this.statements.Add( new CreateIndexStatement() {
+      Name = name,
+      Table = table,
+      Fields = fields,
+      Parameters = parameters
+    });
     return true;
   }
 
