@@ -111,6 +111,14 @@ public class CreateIndexStatement : Statement {
   }
 }
 
+public class CreateViewStatement : Statement {
+  public string Name       { get; set; }
+  public string Definition { get; set; }
+  public override string ToString() {
+    return "view(" + this.Name + ")[" + this.Definition + "]";
+  }
+}
+
 // TODO make abstract
 public class AlterStatement : Statement {
   public override string ToString() {

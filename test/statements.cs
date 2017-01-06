@@ -92,6 +92,17 @@ public class StatementsTest {
         { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
       }
     }.ToString(),
-    "index(Index1 on Table1[F1,F2,F3]){p1=v1,p2=v2,p3=v3}");
+      "index(Index1 on Table1[F1,F2,F3]){p1=v1,p2=v2,p3=v3}"
+    );
+  }
+  
+  [Test]
+  public void testCreateViewStatement() {
+    Assert.AreEqual(new CreateViewStatement() {
+      Name = "View1",
+      Definition = "SELECT * FROM Table1"
+    }.ToString(),
+      "view(View1)[SELECT * FROM Table1]"
+    );
   }
 }
