@@ -46,6 +46,13 @@ public class ParsableTest {
     Assert.IsNull  (new Parsable("  @123 456;789").ConsumeId());
     Assert.AreEqual(new Parsable("   123.456;789").ConsumeId(), "123.456");
   }
+
+  [Test]
+  public void testConsumeNumber() {
+    Assert.AreEqual(new Parsable("   123 456;789").ConsumeNumber(), "123");
+    Assert.IsNull  (new Parsable("  Hi123456;789").ConsumeNumber());
+    Assert.AreEqual(new Parsable("   123.456;789").ConsumeNumber(), "123.456");
+  }
   
   [Test]
   public void testConsumeDictionary() {

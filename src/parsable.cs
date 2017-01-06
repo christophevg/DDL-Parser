@@ -27,6 +27,9 @@ public class Parsable {
   // we also accept "hierarchical IDs", e.g. "namespace.table"
   private static Regex identifier             = new Regex( "^([\\w\\.]+)" );
 
+  // matching numbers only
+  private static Regex number                 = new Regex( "^([0-9\\.]+)" );
+
   // matching of negated parameters, e.g. "NOT VOLATILE"
   private static Regex notParameter           = new Regex( "NOT (\\w+)"   );
 
@@ -61,6 +64,17 @@ public class Parsable {
   public string ConsumeId() {
     this.SkipLeadingWhitespace();
     Match m = Parsable.identifier.Match(this.text);
+    if(m.Success) {
+      int length = m.Groups[0].Captures[0].ToString().Length;
+      return this.Consume(length);
+    }
+    return null;
+  }
+
+  // consumes a number, returning it or null in case of failure
+  public string ConsumeNumber() {
+    this.SkipLeadingWhitespace();
+    Match m = Parsable.number.Match(this.text);
     if(m.Success) {
       int length = m.Groups[0].Captures[0].ToString().Length;
       return this.Consume(length);
