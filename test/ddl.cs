@@ -16,7 +16,7 @@ public class DDLTest {
   }
 
   private void parseAndCompare(string ddl, string text) {
-    this.ddl.parse(ddl);
+    this.ddl.Parse(ddl);
     Assert.AreEqual(this.ddl.Length, 1);
     Assert.AreEqual(this.ddl[0].ToString(), text);
   }
@@ -38,6 +38,20 @@ public class DDLTest {
             PARAM2 param2;
 ",
       "database(TEST001){PARAM1=param1,PARAM2=param2}"
+    );
+  }
+
+  [Test]
+  public void testCreateTablespaceStatement() {
+    this.parseAndCompare(
+      @"     CREATE TABLESPACE
+       TEST001
+         IN TEST002
+           USING STOGROUP TEST003
+          PARAM1 param1
+            PARAM2 param2;
+",
+      "tablespace(TEST001 in TEST002 using TEST003){PARAM1=param1,PARAM2=param2}"
     );
   }
 }
