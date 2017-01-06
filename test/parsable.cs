@@ -67,6 +67,13 @@ public class ParsableTest {
           { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
         }
     );
+    List<string> keys = new List<string>() { "p1 bis" };
+    Assert.AreEqual(
+      new Parsable("p1 bis v1 p2 v2 p3 v3;").ConsumeDictionary(merge: keys),
+        new Dictionary<string,string>() {
+          { "p1_bis", "v1" }, { "p2", "v2" }, { "p3", "v3" }
+        }
+    );
   }
   
   [Test]

@@ -66,13 +66,23 @@ public class Parsable {
   }
 
   // consumes key value pairs into a dictionary
-  public Dictionary<string,string> ConsumeDictionary(string upTo = ";",
-                                                     char   separator = ' ' )
+  public Dictionary<string,string> ConsumeDictionary(string upTo        = ";",
+                                                     char   separator   = ' ',
+                                                     char   merger      = '_',
+                                                     List<string> merge = null )
   {
-    string[] mappings = this.Trim(this.ConsumeUpTo(upTo)).Split(separator);
+    string part = this.Trim(this.ConsumeUpTo(upTo));
+
+    // pre-process DDL, substituting keys with separator to keys with merger
+    if( merge != null ) {
+      foreach( var key in merge ) {
+        part = part.Replace(key, key.Replace(separator, merger));
+      }
+    }
+    List<string> mappings = new List<string>(part.Split(separator));
     this.Consume(upTo);
     Dictionary<string,string> dict = new Dictionary<string,string>();
-    int pairs = mappings.Length - (mappings.Length % 2);
+    int pairs = mappings.Count - (mappings.Count % 2);
     for(int i=0; i<pairs; i+=2) {
       dict[this.Trim(mappings[i])] = this.Trim(mappings[i+1]);
     }
