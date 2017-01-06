@@ -36,6 +36,9 @@ public class Parsable {
   // matching of enabled parameters, e.g. "WITH DEFAULT"
   private static Regex withParameter          = new Regex( "WITH (\\w+)"   );
 
+  // rewriting of unit-enabled values
+  private static Regex withUnit               = new Regex( "([0-9]+) ([KMG])");
+
   public Parsable(string text) {
     this.text = text;
     this.text = Parsable.discardedCharacters  .Replace(this.text, ""  );
@@ -112,6 +115,9 @@ public class Parsable {
         part = part.Replace(option, option + " True" );
       }
     }
+
+    // rewrite unit-enriched values
+    part = Parsable.withUnit.Replace(part, "$1$2");
 
     List<string> mappings = new List<string>(part.Split(separator));
     this.Consume(upTo);
