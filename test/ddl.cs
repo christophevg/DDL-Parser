@@ -103,4 +103,14 @@ public class DDLTest {
       "view(Index1)[SELECT * FROM Table1]"
     );
   }
+
+  [Test]
+  public void testSetStatement() {
+    this.parseAndCompare(
+      @"     SET
+        VARIABLE =
+          ""SOME VALUE"";",
+      "set(VARIABLE=\"SOME VALUE\")"
+    );
+  }
 }

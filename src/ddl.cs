@@ -258,6 +258,23 @@ public class DDL {
     return true;
   }
 
+  private bool ParseSetStatement() {
+    if( this.ddl.Consume("SET ") || this.ddl.Consume("SET\n") ) {
+      string variable = this.ddl.ConsumeUpTo("=");
+      if( variable == null )        { return false; }
+      if(! this.ddl.Consume("=") )  { return false; }
+      string value = this.ddl.ConsumeUpTo(";");
+      if( value == null )           { return false; }
+      if( ! this.ddl.Consume(";") ) { return false; }
+      this.statements.Add(new SetStatement() {
+        Variable = variable,
+        Value    = value
+      });
+      return true;
+    }
+    return false;
+  }
+
   private bool ParseAlterStatement() {
     if( this.ddl.Consume("ALTER ") || this.ddl.Consume("ALTER\n") ) {
       string statement = this.ddl.ConsumeUpTo(";");
@@ -268,16 +285,6 @@ public class DDL {
     return false;
   }
 
-  private bool ParseSetStatement() {
-    if( this.ddl.Consume("SET ") || this.ddl.Consume("SET\n") ) {
-      string statement = this.ddl.ConsumeUpTo(";");
-      this.ddl.Consume(";");
-      this.statements.Add(new SetStatement() { Body = statement });
-      return true;
-    }
-    return false;
-  }
-  
   private bool NotifyParseCreateStatementFailure() {
     Console.WriteLine("Failed to parse Create Statement!");
     return false;
