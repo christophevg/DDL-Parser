@@ -105,4 +105,14 @@ public class StatementsTest {
       "view(View1)[SELECT * FROM Table1]"
     );
   }
+
+  [Test]
+  public void testSetStatement() {
+    Assert.AreEqual(new SetStatement() {
+      Variable = "Variable1",
+      Value    = "Value1"
+    }.ToString(),
+      "set(Variable1=Value1)"
+    );
+  }
 }

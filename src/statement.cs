@@ -119,16 +119,17 @@ public class CreateViewStatement : Statement {
   }
 }
 
-// TODO make abstract
-public class AlterStatement : Statement {
+public class SetStatement : Statement {
+  public string Variable { get; set; }
+  public string Value    { get; set; }
   public override string ToString() {
-    return "alter     " + this.Body;
+    return "set(" + this.Variable + "=" + this.Value + ")";
   }
 }
 
 // TODO make abstract
-public class SetStatement : Statement {
+public class AlterStatement : Statement {
   public override string ToString() {
-    return "set       " + this.Body;
+    return "alter     " + this.Body;
   }
 }
