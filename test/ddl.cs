@@ -17,6 +17,12 @@ public class DDLTest {
 
   private void parseAndCompare(string ddl, string text) {
     this.ddl.Parse(ddl);
+
+    if(this.ddl.errors.Count > 0) {
+      foreach(var error in this.ddl.errors) {
+        Console.WriteLine(error);
+      }
+    }
     Assert.AreEqual(    0, this.ddl.errors.Count             );
     Assert.AreEqual(    1, this.ddl.statements.Count         );
     Assert.AreEqual( text, this.ddl.statements[0].ToString() );
