@@ -1,3 +1,6 @@
+// unit tests for parsable wrapper class
+// author: Christophe VG <contact@christophe.vg>
+
 using System;
 using System.Collections.Generic;
 

@@ -1,3 +1,6 @@
+// unit tests for parsing DDL class
+// author: Christophe VG <contact@christophe.vg>
+
 using System;
 using NUnit.Framework;
 
