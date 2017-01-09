@@ -3,6 +3,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+
 
 public class Program {
   public static void Main(string[] args) {
@@ -21,7 +23,14 @@ public class Program {
     
     DDL ddl = new DDL();
     ddl.Parse(input);
-    ddl.Dump();
+
+    var statements = from statement in ddl.statements
+                     where !(statement is Comment)
+                     select statement;
+                       
+    foreach(var statement in statements) {
+      Console.WriteLine(statement);
+    }
 
   }
 }

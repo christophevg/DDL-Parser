@@ -8,8 +8,6 @@ using System.Collections.Generic;
 
 using System.Text.RegularExpressions;
 
-using System.Linq;
-
 using System.Diagnostics;
 
 public class DDL {
@@ -18,17 +16,10 @@ public class DDL {
   private Parsable ddl;
   
   // resulting statements from parsing
-  private List<Statement> statements = new List<Statement>  {};
+  public List<Statement> statements = new List<Statement>  {};
 
-  // length of DDL is the number of statements that were parsed
-  public int Length {
-    get { return this.statements.Count; }
-  }
-
-  // Indexer to retrieve a given (parsed) statement
-  public Statement this[int key] {
-      get { return this.statements[key]; }
-  }
+  // information about parse errors
+  public List<ParseException> errors = new List<ParseException> {};
 
   // initiates parsing of DLL into statements
   public bool Parse(String ddl) {
@@ -37,94 +28,95 @@ public class DDL {
     while( this.ddl.Length > 0 ) {
       this.ShowParsingInfo();
 
-      if(                         this.ParseComment()   ) { continue; }
-      if( this.ddl.Length == 0 || this.ParseStatement() ) { continue; }
-      if( this.ddl.Length  > 0) { return this.NotifyParseFailure();   }
+      try {
+
+        if(                         this.ParseComment()   ) { continue; }
+        if( this.ddl.Length == 0 || this.ParseStatement() ) { continue; }
+
+        // failed to parse a comment or a statement, skip up to
+        throw new ParseException("-->" + this.ddl.ConsumeUpTo(";", include:true));
+
+      } catch(ParseException e) {
+        // track exception and continue parsing
+        this.errors.Add(e);
+      }
     }
 
     return true;
   }
   
-  // TODO expose differently
-  public void Dump() {
-    var statements = from statement in this.statements
-                     where !(statement is Comment)
-                     select statement;
-                       
-    foreach(var statement in statements) {
-      Console.WriteLine(statement);
-    }
-  }
-
-  // internal parsing steps
+  // COMMENTS
 
   private bool ParseComment() {
-    if( this.ddl.Consume("--") ) {
+    if( this.ddl.TryConsume("--") ) {
       Comment stmt = new Comment() { Body = this.ddl.ConsumeUpTo("\n") };
-      this.ddl.Consume("\n");
+      // this.ddl.Consume("\n");
       this.statements.Add(stmt);
       return true;
     }
     return false;
   }
+  
+  // STATEMENTS
 
   private bool ParseStatement() {
     return this.ParseCreateStatement()
         || this.ParseAlterStatement()
-        || this.ParseSetStatement()
-
-        || this.NotifyParseStatementFailure();
+        || this.ParseSetStatement();
   }
 
   private bool ParseCreateStatement() {
-    if( this.ddl.Consume("CREATE ") || this.ddl.Consume("CREATE\n") ) {
-      return this.ParseCreateDatabaseStatement()
-          || this.ParseCreateTablespaceStatement()
-          || this.ParseCreateTableStatement()
-          || this.ParseCreateIndexStatement()
-          || this.ParseCreateViewStatement()
-
-          || this.NotifyParseCreateStatementFailure();
+    if( ! this.ddl.TryConsume("CREATE ")
+     && ! this.ddl.TryConsume("CREATE\n") )
+    {
+      return false;
     }
-    return false;
+    return this.ParseCreateDatabaseStatement()
+        || this.ParseCreateTablespaceStatement()
+        || this.ParseCreateTableStatement()
+        || this.ParseCreateIndexStatement()
+        || this.ParseCreateViewStatement();
   }
 
   private bool ParseCreateDatabaseStatement() {
-    if( this.ddl.Consume("DATABASE ") || this.ddl.Consume("DATABASE\n") ) {
-      string name = this.ddl.ConsumeId();
-      if( name == null ) { return false; }
-      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
-      CreateDatabaseStatement stmt = new CreateDatabaseStatement() {
-        Name       = name,
-        Parameters = parameters
-      };
-      this.statements.Add(stmt);
-      return true;
+    if( ! this.ddl.TryConsume("DATABASE ") &&
+        ! this.ddl.TryConsume("DATABASE\n") )
+    {
+      return false;
     }
-    return false;
+    string name = this.ddl.ConsumeId();
+    Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
+    CreateDatabaseStatement stmt = new CreateDatabaseStatement() {
+      Name       = name,
+      Parameters = parameters
+    };
+    this.statements.Add(stmt);
+    return true;
   }
 
   private bool ParseCreateTablespaceStatement() {
-    if( this.ddl.Consume("TABLESPACE ") || this.ddl.Consume("TABLESPACE\n") ) {
-      string name = this.ddl.ConsumeId();
-      if( name == null                         ) { return false; }
-      if( ! this.ddl.Consume("IN")             ) { return false; }
-      string database = this.ddl.ConsumeId();
-      if( database == null                     ) { return false; }
-      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
-        merge:   new List<string>() { "USING STOGROUP" },
-        options: new List<string>() { "LOGGED"         }      
-      );
-      CreateTablespaceStatement stmt = 
-        new CreateTablespaceStatement() {
-          Name         = name,
-          Database     = database,
-          Parameters   = parameters
-        };
-      this.statements.Add(stmt);
-      return true;
+    if( ! this.ddl.TryConsume("TABLESPACE ")
+     && ! this.ddl.TryConsume("TABLESPACE\n") )
+    {
+      return false;
     }
-    return false;
+    string name     = this.ddl.ConsumeId();
+                      this.ddl.Consume("IN");
+    string database = this.ddl.ConsumeId();
+
+    Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
+      merge:   new List<string>() { "USING STOGROUP" },
+      options: new List<string>() { "LOGGED"         }      
+    );
+
+    CreateTablespaceStatement stmt = 
+      new CreateTablespaceStatement() {
+        Name         = name,
+        Database     = database,
+        Parameters   = parameters
+      };
+    this.statements.Add(stmt);
+    return true;
   }
 
   // the currently being parsed field and constraint lists
@@ -132,46 +124,68 @@ public class DDL {
   private List<Constraint> constraints = new List<Constraint>();
 
   private bool ParseCreateTableStatement() {
-    if( this.ddl.Consume("TABLE ") || this.ddl.Consume("TABLE\n") ) {
-      string name = this.ddl.ConsumeId();
-      if( name == null             ) { return false; }
-
-      if( ! this.ddl.Consume("(")  ) { return false; }
-
-      this.fields      = new List<Field>();
-      this.constraints = new List<Constraint>();
-      
-      while( this.ParseConstraint() || this.ParseField() ) {}
-
-      if( ! this.ddl.Consume(")")  ) { return false; }
-
-      if( ! this.ddl.Consume("IN") ) { return false; }
-      string database = this.ddl.ConsumeId();
-      if( database == null         ) { return false; }
-      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
-        merge:   new List<string>() { "DATA CAPTURE" }
-      );
-      CreateTableStatement stmt = 
-        new CreateTableStatement() {
-          Name        = name,
-          Fields      = this.fields,
-          Constraints = this.constraints,
-          Database    = database,
-          Parameters  = parameters
-        };
-      this.statements.Add(stmt);
-      return true;
+    if( ! this.ddl.TryConsume("TABLE ")
+     && ! this.ddl.TryConsume("TABLE\n") )
+    {
+      return false;
     }
-    return false;
+
+    string name     = this.ddl.ConsumeId();
+                      this.ddl.Consume("(");
+
+    this.fields      = new List<Field>();
+    this.constraints = new List<Constraint>();
+    
+    while( this.ParseConstraint() || this.ParseField() ) {}
+
+                      this.ddl.Consume(")");
+                      this.ddl.Consume("IN");
+
+    string database = this.ddl.ConsumeId();
+
+    Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
+      merge:   new List<string>() { "DATA CAPTURE" }
+    );
+
+    CreateTableStatement stmt = 
+      new CreateTableStatement() {
+        Name        = name,
+        Fields      = this.fields,
+        Constraints = this.constraints,
+        Database    = database,
+        Parameters  = parameters
+      };
+    this.statements.Add(stmt);
+    return true;
+  }
+
+  private bool ParseConstraint() {
+    if( ! this.ddl.TryConsume("CONSTRAINT ")
+     && ! this.ddl.TryConsume("CONSTRAINT\n") )
+    {
+      return false;
+    }
+
+    string name = this.ddl.ConsumeId();
+
+    return this.ParsePrimaryKeyConstraint(name);
   }
 
   private bool ParseField() {
-    string name = this.ddl.ConsumeId();
-    if( name == null ) { return false; }
+    string name;
+    try {
+      name = this.ddl.ConsumeId();
+    } catch(ParseException) {
+      // no ID, here means not a Field (anymore)
+      return false;
+    }
+
     string type = this.ParseType();
-    if( type == null ) { return false; }
-    Dictionary<string,string> parameters =
-      this.ddl.ConsumeDictionary(upTo: ",", merge: new List<string> { "SBCS DATA" });
+
+    Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
+      upTo: ",", merge: new List<string> { "SBCS DATA" }
+    );
+
     this.fields.Add(new Field() {
       Name       = name,
       Type       = type,
@@ -180,61 +194,73 @@ public class DDL {
     return true;
   }
 
-  private bool ParseConstraint() {
-    if( ! this.ddl.Consume("CONSTRAINT") ) { return false; }
-    string name = this.ddl.ConsumeId();
-    if( name == null )                     { return false; }
-
-    return this.ParsePrimaryKeyConstraint(name);
-  }
-
   private bool ParsePrimaryKeyConstraint(string name) {
-    if( this.ddl.Consume("PRIMARY KEY") ) {
-      if( ! this.ddl.Consume("(") ) { return false; }
-      string fields = this.ddl.ConsumeUpTo(")");
-      if( ! this.ddl.Consume(")") ) { return false; }
-      this.constraints.Add(new Constraint() {
-        Name       = name,
-        Parameters = new Dictionary<string,string>() {
-          { "PRIMARY_KEY", fields }
-        }
-      });
-      return true;
+    if( ! this.ddl.TryConsume("PRIMARY KEY ")
+     && ! this.ddl.TryConsume("PRIMARY KEY\n") ) {
+      return false;
     }
-    return false;
+    
+                    this.ddl.Consume("(");
+    string fields = this.ddl.ConsumeUpTo(")");
+                    this.ddl.Consume(")");
+
+    this.constraints.Add(new Constraint() {
+      Name       = name,
+      Parameters = new Dictionary<string,string>() {
+        { "PRIMARY_KEY", fields }
+      }
+    });
+    return true;
   }
 
   private string ParseType() {
     string type = this.ddl.ConsumeId();
-    if( type == null )              { return null; }
-    // optional parameter
-    if( this.ddl.Consume("(") ) {
-      type += "(" + this.ddl.ConsumeNumber();
-      if( this.ddl.Consume(",") ) {
-        // second part to type number
-        type += "," + this.ddl.ConsumeNumber();
-      }
-      type += ")";
-      if( ! this.ddl.Consume(")") ) { return null; }
+    // optional length
+    if( ! this.ddl.TryConsume("(") ) { return type; }
+    // optional length is present
+    type += "(" + this.ddl.ConsumeNumber();
+    // optional second part length
+    if( ! this.ddl.TryConsume(",") ) {
+      this.ddl.Consume(")");
+      return type + ")";
     }
+    // second part to type number
+    type += "," + this.ddl.ConsumeNumber();
+                  this.ddl.Consume(")");
+    type += ")";
+
     return type;
   }
 
   private bool ParseCreateIndexStatement() {
-    bool unique = this.ddl.Consume("UNIQUE");
-    if( ! this.ddl.Consume("INDEX") ) { return false; }
-    string name = this.ddl.ConsumeId();
-    if( name == null )                { return false; }
-    if( ! this.ddl.Consume("ON") )    { return false; }
-    string table = this.ddl.ConsumeId();
-    if( ! this.ddl.Consume("(") )    { return false; }
+    // unique is optional
+    bool unique = this.ddl.TryConsume("UNIQUE ")
+               || this.ddl.TryConsume("UNIQUE\n");
+
+    if( ! this.ddl.TryConsume("INDEX ")
+     && ! this.ddl.TryConsume("INDEX\n") )
+    {
+      if( unique ) {
+        throw new ParseException(
+          "could not consume 'INDEX' at " + this.ddl.Context
+        );
+      }
+      // without unique it might simply be some other create statement
+      return false;
+    }
+    string name   = this.ddl.ConsumeId();
+                    this.ddl.Consume("ON");
+    string table  = this.ddl.ConsumeId();
+                    this.ddl.Consume("(");
     string fields = this.ddl.ConsumeUpTo(")");
-    if( ! this.ddl.Consume(")") )    { return false; }
+                    this.ddl.Consume(")");
+
     Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
       merge:   new List<string>() { "USING STOGROUP" },
       options: new List<string>() { "CLUSTER"        }
     );
     parameters.Add("UNIQUE", unique.ToString());
+
     this.statements.Add( new CreateIndexStatement() {
       Name = name,
       Table = table,
@@ -245,12 +271,16 @@ public class DDL {
   }
 
   private bool ParseCreateViewStatement() {
-    if( ! this.ddl.Consume("VIEW") ) { return false; }
-    string name = this.ddl.ConsumeId();
-    if( name == null )               { return false; }
-    if( ! this.ddl.Consume("AS") ) { return false; }
+    if( ! this.ddl.TryConsume("VIEW ")
+     && ! this.ddl.TryConsume("VIEW\n") )
+    {
+      return false;
+    }
+    string name       = this.ddl.ConsumeId();
+                        this.ddl.Consume("AS");
     string definition = this.ddl.ConsumeUpTo(";");
-    if( ! this.ddl.Consume(";") )    { return false; }
+                        this.ddl.Consume(";");
+
     this.statements.Add( new CreateViewStatement() {
       Name = name,
       Definition = definition
@@ -258,46 +288,66 @@ public class DDL {
     return true;
   }
 
+  // SET STATEMENTS
+
   private bool ParseSetStatement() {
-    if( this.ddl.Consume("SET ") || this.ddl.Consume("SET\n") ) {
-      string variable = this.ddl.ConsumeUpTo("=");
-      if( variable == null )        { return false; }
-      if(! this.ddl.Consume("=") )  { return false; }
-      string value = this.ddl.ConsumeUpTo(";");
-      if( value == null )           { return false; }
-      if( ! this.ddl.Consume(";") ) { return false; }
-      this.statements.Add(new SetStatement() {
-        Variable = variable,
-        Value    = value
-      });
-      return true;
+    if( ! this.ddl.TryConsume("SET ") 
+     && ! this.ddl.TryConsume("SET\n") )
+    {
+      return false;
     }
-    return false;
-  }
 
-  private bool ParseAlterStatement() {
-    if( this.ddl.Consume("ALTER ") || this.ddl.Consume("ALTER\n") ) {
-      string statement = this.ddl.ConsumeUpTo(";");
-      this.ddl.Consume(";");
-      this.statements.Add(new AlterStatement() { Body = statement });
-      return true;
-    }
-    return false;
-  }
-
-  private bool NotifyParseCreateStatementFailure() {
-    Console.WriteLine("Failed to parse Create Statement!");
-    return false;
-  }
-
-  private bool NotifyParseStatementFailure() {
-    Console.WriteLine("Failed to parse Statement!");
-    return false;
+    return this.ParseSetParameterStatement();
   }
   
-  private bool NotifyParseFailure() {
-    Console.WriteLine("Failed to parse DDL! Aborting..");
-    Console.WriteLine(this.ddl.Peek(75));
+  private bool ParseSetParameterStatement() {
+    string name  = this.ddl.ConsumeId();
+                   this.ddl.Consume("=");
+    string value = this.ddl.ConsumeUpTo(";", include:true);
+    this.statements.Add(new SetParameterStatement() {
+      Variable = name,
+      Value = value
+    });
+    return true;
+  }
+
+  // ALTER STATEMENTS
+
+  private bool ParseAlterStatement() {
+    if( ! this.ddl.TryConsume("ALTER ")
+     && ! this.ddl.TryConsume("ALTER\n") )
+    {
+      return false;
+    }
+
+    return this.ParseAlterTableStatement();
+  }
+  
+  private bool ParseAlterTableStatement() {
+    if( ! this.ddl.TryConsume("TABLE ")
+     && ! this.ddl.TryConsume("TABLE\n") )
+    {
+      return false;
+    }
+    string name = this.ddl.ConsumeId();
+
+    return this.ParseAlterTableAddStatement(name);
+  }
+
+  private bool ParseAlterTableAddStatement(string name) {
+    if( ! this.ddl.TryConsume("ADD ")
+     && ! this.ddl.TryConsume("ADD\n") )
+    {
+      return false;
+    }
+    this.constraints = new List<Constraint>();
+
+    if( this.ParseConstraint() ) {
+      this.statements.Add(new AlterTableAddConstraintStatement() {
+        Name       = name,
+        Constraint = this.constraints[0]
+      });
+    }
     return false;
   }
 

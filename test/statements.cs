@@ -107,12 +107,12 @@ public class StatementsTest {
   }
 
   [Test]
-  public void testSetStatement() {
-    Assert.AreEqual(new SetStatement() {
+  public void testSetParameterStatement() {
+    Assert.AreEqual(new SetParameterStatement() {
       Variable = "Variable1",
       Value    = "Value1"
     }.ToString(),
-      "set(Variable1=Value1)"
+      "param(Variable1=Value1)"
     );
   }
 }

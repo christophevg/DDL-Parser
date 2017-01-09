@@ -15,8 +15,7 @@ public class Comment : Statement {
   }
 }
 
-// TODO make abstract
-public class CreateStatement : Statement {
+public abstract class CreateStatement : Statement {
   public override string ToString() {
     return "create    " + this.Body;
   }
@@ -119,17 +118,31 @@ public class CreateViewStatement : Statement {
   }
 }
 
-public class SetStatement : Statement {
-  public string Variable { get; set; }
-  public string Value    { get; set; }
+public abstract class SetStatement : Statement {
   public override string ToString() {
-    return "set(" + this.Variable + "=" + this.Value + ")";
+    return "set(" + this.Body + ")";
   }
 }
 
-// TODO make abstract
-public class AlterStatement : Statement {
+public class SetParameterStatement : SetStatement {
+  public string Variable { get; set; }
+  public string Value    { get; set; }
   public override string ToString() {
-    return "alter     " + this.Body;
+    return "param(" + this.Variable + "=" + this.Value + ")";
+  }
+}
+
+public abstract class AlterStatement : Statement {
+  public override string ToString() {
+    return "alter(" + this.Body + ")";
+  }
+}
+
+public class AlterTableAddConstraintStatement : AlterStatement {
+  public string     Name       { get; set; }
+  public Constraint Constraint { get; set; }
+  
+  public override string ToString() {
+    return "alter(" + this.Name + ":" + this.Constraint + ")";
   }
 }

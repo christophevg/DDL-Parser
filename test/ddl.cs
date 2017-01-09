@@ -17,8 +17,9 @@ public class DDLTest {
 
   private void parseAndCompare(string ddl, string text) {
     this.ddl.Parse(ddl);
-    Assert.AreEqual(this.ddl.Length, 1);
-    Assert.AreEqual(this.ddl[0].ToString(), text);
+    Assert.AreEqual(    0, this.ddl.errors.Count             );
+    Assert.AreEqual(    1, this.ddl.statements.Count         );
+    Assert.AreEqual( text, this.ddl.statements[0].ToString() );
   }
 
   [Test]
@@ -51,7 +52,8 @@ public class DDLTest {
           PARAM1 param1
             PARAM2 param2;
 ",
-      "tablespace(TEST001 in TEST002){USING_STOGROUP=TEST003,PARAM1=param1,PARAM2=param2}"
+      "tablespace(TEST001 in TEST002)" +
+      "{USING_STOGROUP=TEST003,PARAM1=param1,PARAM2=param2}"
     );
   }
 
@@ -73,7 +75,8 @@ public class DDLTest {
             PARAM3 NO;
 ",
       "table(TEST.001 in TEST.002)" +
-      "[F1:T1(123){NULL=False,FOR=SBCS_DATA},F2:T2(4,5){NULL=False},F3:T3{FOR=SBCS_DATA},F4:T4{}]" +
+      "[F1:T1(123){NULL=False,FOR=SBCS_DATA},F2:T2(4,5){NULL=False}," +
+      "F3:T3{FOR=SBCS_DATA},F4:T4{}]" +
       "<PK_TEST{PRIMARY_KEY=F4}>" +
       "{DATA_CAPTURE=CHANGES,PARAM1=param1,PARAM2=False,PARAM3=False}"
     );
@@ -90,7 +93,8 @@ public class DDLTest {
         )
          USING STOGROUP Group1
          PARAM1 param1;",
-      "index(Index1 on Table1[Field1 ASC]){USING_STOGROUP=Group1,PARAM1=param1,UNIQUE=True}"
+      "index(Index1 on Table1[Field1 ASC])" +
+      "{USING_STOGROUP=Group1,PARAM1=param1,UNIQUE=True}"
     );
   }
 
@@ -105,12 +109,47 @@ public class DDLTest {
   }
 
   [Test]
-  public void testSetStatement() {
+  public void testSetParameterStatement() {
     this.parseAndCompare(
       @"     SET
         VARIABLE =
           ""SOME VALUE"";",
-      "set(VARIABLE=\"SOME VALUE\")"
+      "param(VARIABLE=\"SOME VALUE\")"
+    );
+  }
+
+  [Test]
+  public void testUnknownStatement() {
+    string unknown = "UNKNOWN unknown1 ON Table1 WITH DEFAULT CREATE";
+    string ddl = @"     SET
+        VARIABLE =
+          ""SOME VALUE"";
+    CREATE "+ unknown +@";
+    -- comment test
+    ";
+
+    this.ddl.Parse(ddl);
+
+    Assert.AreEqual(
+      2,
+      this.ddl.statements.Count
+    );
+    Assert.AreEqual(
+      "param(VARIABLE=\"SOME VALUE\")",
+      this.ddl.statements[0].ToString()
+    );
+    Assert.AreEqual(
+      "comment(comment test)",
+      this.ddl.statements[1].ToString()
+    );
+
+    Assert.AreEqual(
+      1,
+      this.ddl.errors.Count
+    );
+    Assert.AreEqual(
+      "-->" + unknown,
+      this.ddl.errors[0].Message
     );
   }
 }

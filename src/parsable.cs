@@ -11,6 +11,12 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+public class ParseException : System.Exception {
+  public ParseException() : base() { }
+  public ParseException(string message) : base(message) { }
+  public ParseException(string message, System.Exception inner) : base(message, inner) { }
+}
+
 public class Parsable {
 
   // the parsable text
@@ -47,23 +53,44 @@ public class Parsable {
 
   public int  Length { get { return this.text.Length; } }
 
+  public string Context { get { return this.Peek(20) + "..."; } }
+
   // skips any whitespace at the start of the current text buffer
   public void SkipLeadingWhitespace() {
     this.text = Parsable.leadingWhitespace.Replace(this.text, "");
   }
   
   // tries to consume a give string, returns success
-  public bool Consume(string text) {
+  public void Consume(string text) {
     this.text = Parsable.leadingWhitespace.Replace(this.text, "");
-    if(this.text.StartsWith(text)) {
-      return this.Consume(text.Length) == this.Trim(text);
+    if(! this.text.StartsWith(text) ) {
+      throw new ParseException(
+        "could not consume '" + text + "' at " + this.Context
+      );
     }
-    return false;
+    // do actual consumption
+    this.Consume(text.Length);
+  }
+  
+  public bool TryConsume(string text) {
+    try {
+      this.Consume(text);
+      return true;
+    } catch(ParseException) {
+      return false;
+    }
   }
 
   // consumes all characters up to a given string
-  public string ConsumeUpTo(string text) {
-    return this.Consume(this.text.IndexOf(text));
+  public string ConsumeUpTo(string upTo, bool include=false) {
+    int upToPosition = this.text.IndexOf(upTo);
+    if(upToPosition == -1) {
+      throw new ParseException("could not consume up to not found '" + upTo + "'");
+    }
+    string text = this.Consume(upToPosition);
+    // since whitespace is trimmed, trying to consume it here fails
+    if( include && upTo != "\n" ) { this.Consume(upTo); }
+    return text;
   }
 
   // consumes an ID, returning it or null in case of failure
@@ -74,7 +101,7 @@ public class Parsable {
       int length = m.Groups[0].Captures[0].ToString().Length;
       return this.Consume(length);
     }
-    return null;
+    throw new ParseException( "could not consume ID at " + this.Context );
   }
 
   // consumes a number, returning it or null in case of failure
@@ -85,7 +112,7 @@ public class Parsable {
       int length = m.Groups[0].Captures[0].ToString().Length;
       return this.Consume(length);
     }
-    return null;
+    throw new ParseException( "could not consume number at " + this.Context );
   }
 
   // consumes key value pairs into a dictionary
@@ -95,7 +122,7 @@ public class Parsable {
                                                      List<string> merge   = null,
                                                      List<string> options = null )
   {
-    string part = this.Trim(this.ConsumeUpTo(upTo));
+    string part = this.Trim(this.ConsumeUpTo(upTo, include:true));
 
     // pre-process DDL, substituting keys with separator to keys with merger
     if( merge != null ) {
@@ -123,7 +150,7 @@ public class Parsable {
     part = Parsable.withUnit.Replace(part, "$1$2");
 
     List<string> mappings = new List<string>(part.Split(separator));
-    this.Consume(upTo);
+
     Dictionary<string,string> dict = new Dictionary<string,string>();
     int pairs = mappings.Count - (mappings.Count % 2);
     for(int i=0; i<pairs; i+=2) {
@@ -140,6 +167,8 @@ public class Parsable {
     return this.text.Substring(0, Math.Min(amount, this.Length));
   }
   
+  // ACTUAL CONSUMPTION
+
   // consumes an amount of characters
   private string Consume(int amount) {
     amount = Math.Min(amount, this.Length);
