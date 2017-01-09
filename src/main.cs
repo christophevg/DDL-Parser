@@ -32,5 +32,11 @@ public class Program {
       Console.WriteLine(statement);
     }
 
+    if(ddl.errors.Count > 0) {
+      Console.WriteLine("ERRORS");
+      foreach(var error in ddl.errors) {
+        Console.WriteLine(error.Message);
+      }
+    }
   }
 }
