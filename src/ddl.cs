@@ -301,7 +301,7 @@ public class DDL {
   }
   
   private bool ParseSetParameterStatement() {
-    string name  = this.ddl.ConsumeId();
+    string name  = this.ddl.ConsumeUpTo("=");
                    this.ddl.Consume("=");
     string value = this.ddl.ConsumeUpTo(";", include:true);
     this.statements.Add(new SetParameterStatement() {

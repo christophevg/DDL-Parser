@@ -119,6 +119,16 @@ public class DDLTest {
   }
 
   [Test]
+  public void testSetParameterNameWithSpaceStatement() {
+    this.parseAndCompare(
+      @"     SET
+        VARIABLE NAME =
+          ""SOME VALUE"";",
+      "param(VARIABLE NAME=\"SOME VALUE\")"
+    );
+  }
+
+  [Test]
   public void testUnknownStatement() {
     string unknown = "UNKNOWN unknown1 ON Table1 WITH DEFAULT CREATE";
     string ddl = @"     SET
