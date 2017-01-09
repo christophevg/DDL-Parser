@@ -171,6 +171,16 @@ public class ParsableTest {
   }
   
   [Test]
+  public void testConsumeDictionaryFunctionStyleEntry() {
+    Assert.AreEqual(
+      new Parsable("p1 v1 INCLUDE( p2,p2b ) p3 v3;").ConsumeDictionary(),
+        new Dictionary<string,string>() {
+          { "p1", "v1" }, { "INCLUDE", "p2,p2b" }, { "p3", "v3" }
+        }
+    );
+  }
+
+  [Test]
   public void testPeek() {
     Assert.AreEqual(new Parsable("  123").Peek(6), " 123");
   }

@@ -45,6 +45,9 @@ public class Parsable {
   // rewriting of unit-enabled values
   private static Regex withUnit               = new Regex( "([0-9]+) ([KMG]\\s)");
 
+  // function
+  private static Regex function               = new Regex( "([\\w]+)\\(\\s*([^\\)\\s]+)\\s*\\)");
+
   public Parsable(string text) {
     this.text = text;
     this.text = Parsable.discardedCharacters  .Replace(this.text, ""  );
@@ -146,6 +149,9 @@ public class Parsable {
 
     // pre-process DDL, substituting "WITH PARAM" to "PARAM True"
     part = Parsable.withParameter.Replace(part, "$1 True");
+
+    // pre-process DDL, substituting Functional Style Key/Value pairs
+    part = Parsable.function.Replace(part, "$1 $2");
 
     // extend single keyword switches
     if( options != null ) {
