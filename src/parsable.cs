@@ -51,9 +51,17 @@ public class Parsable {
     this.text = Parsable.repeatedWhitespace   .Replace(this.text, " " );
   }
 
-  public int  Length { get { return this.text.Length; } }
+  public int  Length {
+    get {
+      return this.text.Length;
+    }
+  }
 
-  public string Context { get { return this.Peek(20) + "..."; } }
+  public string Context {
+    get {
+      return this.Peek(20) + "[...]";
+    }
+  }
 
   // skips any whitespace at the start of the current text buffer
   public void SkipLeadingWhitespace() {
