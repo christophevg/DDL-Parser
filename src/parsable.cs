@@ -93,7 +93,10 @@ public class Parsable {
   public string ConsumeUpTo(string upTo, bool include=false) {
     int upToPosition = this.text.IndexOf(upTo);
     if(upToPosition == -1) {
-      throw new ParseException("could not consume up to not found '" + upTo + "'");
+      throw new ParseException(
+        "could not consume up to not found '" + upTo +
+        "' at " + this.Context
+      );
     }
     string text = this.Consume(upToPosition);
     // since whitespace is trimmed, trying to consume it here fails
