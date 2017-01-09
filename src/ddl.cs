@@ -33,7 +33,8 @@ public class DDL {
         if(                         this.ParseComment()   ) { continue; }
         if( this.ddl.Length == 0 || this.ParseStatement() ) { continue; }
 
-        // failed to parse a comment or a statement, skip up to
+        // failed to parse a comment or a statement, skip up to end of statement
+        // to skip garbage. comments are no problem
         throw new ParseException("-->" + this.ddl.ConsumeUpTo(";", include:true));
 
       } catch(ParseException e) {
