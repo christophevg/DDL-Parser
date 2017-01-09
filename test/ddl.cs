@@ -135,6 +135,56 @@ public class DDLTest {
   }
 
   [Test]
+  public void testAlterTableAddForeignKeyConstraint() {
+    this.parseAndCompare(
+      @"     ALTER TABLE
+       Table1
+       ADD
+         CONSTRAINT FK_Name
+         FOREIGN KEY
+         (
+          Field1
+          ,Field2
+         )
+         REFERENCES
+         FK_Table
+         (
+          FK_Field1
+          ,FK_Field2
+         )
+         ON DELETE RESTRICT
+         ENFORCED
+      ;",
+      "alter(Table1:FK_Name{ON_DELETE=RESTRICT,ENFORCED=True,KEYS=Field1,Field2,TABLE=FK_Table,REFERENCES=FK_Field1,FK_Field2})"
+    );
+  }
+
+  [Test]
+  public void testAlterTableAddForeignKeyConstraintWithSetNullParameter() {
+    this.parseAndCompare(
+      @"     ALTER TABLE
+       Table1
+       ADD
+         CONSTRAINT FK_Name
+         FOREIGN KEY
+         (
+          Field1
+          ,Field2
+         )
+         REFERENCES
+         FK_Table
+         (
+          FK_Field1
+          ,FK_Field2
+         )
+         ON DELETE SET NULL
+         ENFORCED
+      ;",
+      "alter(Table1:FK_Name{ON_DELETE=SET_NULL,ENFORCED=True,KEYS=Field1,Field2,TABLE=FK_Table,REFERENCES=FK_Field1,FK_Field2})"
+    );
+  }
+
+  [Test]
   public void testUnknownStatement() {
     string unknown = "UNKNOWN unknown1 ON Table1 WITH DEFAULT CREATE";
     string ddl = @"     SET

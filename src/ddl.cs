@@ -169,7 +169,59 @@ public class DDL {
 
     string name = this.ddl.ConsumeId();
 
-    return this.ParsePrimaryKeyConstraint(name);
+    return this.ParsePrimaryKeyConstraint(name)
+        || this.ParseForeignKeyConstraint(name);
+  }
+
+  private bool ParsePrimaryKeyConstraint(string name) {
+    if( ! this.ddl.TryConsume("PRIMARY KEY ")
+     && ! this.ddl.TryConsume("PRIMARY KEY\n") ) {
+      return false;
+    }
+    
+                    this.ddl.Consume("(");
+    string fields = this.ddl.ConsumeUpTo(")");
+                    this.ddl.Consume(")");
+
+    this.constraints.Add(new Constraint() {
+      Name       = name,
+      Parameters = new Dictionary<string,string>() {
+        { "PRIMARY_KEY", fields }
+      }
+    });
+    return true;
+  }
+
+  private bool ParseForeignKeyConstraint(string name) {
+    if( ! this.ddl.TryConsume("FOREIGN KEY ")
+     && ! this.ddl.TryConsume("FOREIGN KEY\n") ) {
+      return false;
+    }
+                        this.ddl.Consume("(");
+    string keys       = this.ddl.ConsumeUpTo(")").Replace(" ", "");
+                        this.ddl.Consume(")");
+
+                        this.ddl.Consume("REFERENCES");
+
+    string table      = this.ddl.ConsumeId();
+                        this.ddl.Consume("(");
+    string references = this.ddl.ConsumeUpTo(")").Replace(" ", "");
+                        this.ddl.Consume(")");
+
+    Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
+      merge:   new List<string>() { "ON DELETE", "SET NULL" },
+      options: new List<string>() { "ENFORCED"              }
+    );
+
+    parameters.Add("KEYS",       keys      );
+    parameters.Add("TABLE",      table     );
+    parameters.Add("REFERENCES", references);
+
+    this.constraints.Add(new Constraint() {
+      Name       = name,
+      Parameters = parameters
+    });
+    return true;
   }
 
   private bool ParseField() {
@@ -191,25 +243,6 @@ public class DDL {
       Name       = name,
       Type       = type,
       Parameters = parameters
-    });
-    return true;
-  }
-
-  private bool ParsePrimaryKeyConstraint(string name) {
-    if( ! this.ddl.TryConsume("PRIMARY KEY ")
-     && ! this.ddl.TryConsume("PRIMARY KEY\n") ) {
-      return false;
-    }
-    
-                    this.ddl.Consume("(");
-    string fields = this.ddl.ConsumeUpTo(")");
-                    this.ddl.Consume(")");
-
-    this.constraints.Add(new Constraint() {
-      Name       = name,
-      Parameters = new Dictionary<string,string>() {
-        { "PRIMARY_KEY", fields }
-      }
     });
     return true;
   }
@@ -349,7 +382,7 @@ public class DDL {
         Constraint = this.constraints[0]
       });
     }
-    return false;
+    return true;
   }
 
   [ConditionalAttribute("DEBUG")]
