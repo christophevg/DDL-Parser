@@ -23,8 +23,10 @@ public abstract class CreateStatement : Statement {
 
 public class CreateDatabaseStatement : Statement {
   public string Name { get; set; }
-  public Dictionary<string,string> Parameters { get; set; } =
-    new Dictionary<string,string>();
+  public Dictionary<string,string> Parameters { get; set; }
+  public CreateDatabaseStatement() {
+    this.Parameters = new Dictionary<string,string>();
+  }
   public override string ToString() {
     return "database(" + this.Name + ")" + "{" +
       string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
@@ -35,8 +37,10 @@ public class CreateDatabaseStatement : Statement {
 public class CreateTablespaceStatement : Statement {
   public string Name { get; set; }
   public string Database { get; set; }
-  public Dictionary<string,string> Parameters { get; set; } =
-    new Dictionary<string,string>();
+  public Dictionary<string,string> Parameters { get; set; }
+  public CreateTablespaceStatement() {
+    this.Parameters = new Dictionary<string,string>();
+  }
   public override string ToString() {
     return "tablespace(" + this.Name +
       " in " + this.Database +
@@ -50,8 +54,10 @@ public class CreateTablespaceStatement : Statement {
 public class Field {
   public string Name { get; set; }
   public string Type { get; set; }
-  public Dictionary<string,string> Parameters { get; set; } =
-    new Dictionary<string,string>();
+  public Dictionary<string,string> Parameters { get; set; }
+  public Field() {
+    this.Parameters = new Dictionary<string,string>();
+  }
   public override string ToString() {
     return this.Name + ":" + this.Type +
       "{" +
@@ -62,8 +68,10 @@ public class Field {
 
 public class Constraint {
   public string Name { get; set; }
-  public Dictionary<string,string> Parameters { get; set; } =
-    new Dictionary<string,string>();
+  public Dictionary<string,string> Parameters { get; set; } 
+  public Constraint() {
+    this.Parameters = new Dictionary<string,string>();
+  }
   public override string ToString() {
     return this.Name +
       "{" +
@@ -75,10 +83,14 @@ public class Constraint {
 public class CreateTableStatement : Statement {
   public string Name { get; set; }
   public string Database { get; set; }
-  public List<Field> Fields { get; set; } = new List<Field>();
-  public List<Constraint> Constraints { get; set; } = new List<Constraint>();
-  public Dictionary<string,string> Parameters { get; set; } =
-    new Dictionary<string,string>();
+  public List<Field> Fields { get; set; }
+  public List<Constraint> Constraints { get; set; }
+  public Dictionary<string,string> Parameters { get; set; }
+  public CreateTableStatement() {
+    this.Fields      = new List<Field>();
+    this.Constraints = new List<Constraint>();
+    this.Parameters = new Dictionary<string,string>();
+  }
   public override string ToString() {
     return "table(" + this.Name +
       " in " + this.Database + ")" +
@@ -98,8 +110,10 @@ public class CreateIndexStatement : Statement {
   public string Name   { get; set; }
   public string Table  { get; set; }
   public string Fields { get; set; }
-  public Dictionary<string,string> Parameters { get; set; } =
-    new Dictionary<string,string>();
+  public Dictionary<string,string> Parameters { get; set; }
+  public CreateIndexStatement() {
+    this.Parameters = new Dictionary<string,string>();
+  }
   public override string ToString() {
     return "index(" +  this.Name +
       " on " + this.Table + "[" + this.Fields + "]" +
