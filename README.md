@@ -1,8 +1,8 @@
-# DDL Query
+# DDL Parser
 
 Straightforward DDL parser with Linq query interface.  
 Christophe VG (<contact@christophe.vg>)
-[https://github.com/christophevg/ddl-query](https://github.com/christophevg/ddl-query)
+[https://github.com/christophevg/DDL-Parser](https://github.com/christophevg/DDL-Parser)
 
 ## Notes
 
