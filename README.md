@@ -1,8 +1,12 @@
 # DDL Parser
 
-Straightforward DDL parser with Linq query interface.  
+A DDL parser providing an Object-Oriented, Queryable (read: Linq) interface 
 Christophe VG (<contact@christophe.vg>)
 [https://github.com/christophevg/DDL-Parser](https://github.com/christophevg/DDL-Parser)
+
+## Disclaimer
+
+This project doesn't aim to be feature complete. Although it would like to be generic, it also currently specific DB2 constructs.
 
 ## Notes
 
