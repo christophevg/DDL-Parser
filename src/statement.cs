@@ -6,6 +6,14 @@ using System.Linq;
 
 namespace DDL_Parser {
 
+  public class QualifiedName {
+    public string Scope { get; set; }
+    public string Name  { get; set; }
+    public override string ToString() {
+      return (!(this.Scope == null) ? this.Scope + "." : "") + this.Name;
+    }
+  }
+
   public abstract class Statement {
     public string Body { get; set; }
   }

@@ -120,6 +120,25 @@ namespace DDL_Parser {
         "param(Variable1=Value1)"
       );
     }
+
+    [Test]
+    public void testFullyQualifiedName() {
+      Assert.AreEqual(new QualifiedName() {
+        Scope = "Scope1",
+        Name  = "Name1"
+      }.ToString(),
+        "Scope1.Name1"
+      );
+    }
+
+    [Test]
+    public void testSimpleQualifiedName() {
+      Assert.AreEqual(new QualifiedName() {
+        Name  = "Name1"
+      }.ToString(),
+        "Name1"
+      );
+    }
   }
 
 }
