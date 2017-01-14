@@ -32,8 +32,8 @@ namespace DDL_Parser {
     private static Regex trailingWhitespace     = new Regex( "\\s+$"        );
     private static Regex newlinesWithWhitespace = new Regex( "\n[ \t]*"     );
 
-    // we also accept "hierarchical IDs", e.g. "namespace.table"
-    private static Regex identifier             = new Regex( "^([\\w\\.]+)" );
+    // IDs can be composed of writeable characters
+    private static Regex identifier             = new Regex( "^([\\w]+)" );
 
     // matching numbers only
     private static Regex number                 = new Regex( "^([0-9\\.]+)" );
@@ -118,6 +118,16 @@ namespace DDL_Parser {
         return this.Consume(length);
       }
       throw new ParseException( "could not consume ID at " + this.Context );
+    }
+
+    public QualifiedName ConsumeQualifiedName() {
+      string part1 = this.ConsumeId();
+      try {
+        this.Consume(".");
+        string part2 = this.ConsumeId();
+        return new QualifiedName() { Scope = part1, Name = part2 };
+      } catch(ParseException) {} // just catch and go on
+      return new QualifiedName() { Name = part1 };
     }
 
     // consumes a number, returning it or null in case of failure

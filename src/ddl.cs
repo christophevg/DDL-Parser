@@ -89,7 +89,7 @@ namespace DDL_Parser {
       {
         return false;
       }
-      string name = this.ddl.ConsumeId();
+      QualifiedName name = this.ddl.ConsumeQualifiedName();
       Dictionary<string,string> parameters = this.ddl.ConsumeDictionary();
       CreateDatabaseStatement stmt = new CreateDatabaseStatement() {
         Name       = name,
@@ -105,9 +105,9 @@ namespace DDL_Parser {
       {
         return false;
       }
-      string name     = this.ddl.ConsumeId();
-                        this.ddl.Consume("IN");
-      string database = this.ddl.ConsumeId();
+      QualifiedName name     = this.ddl.ConsumeQualifiedName();
+                               this.ddl.Consume("IN");
+      QualifiedName database = this.ddl.ConsumeQualifiedName();
 
       Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
         merge:   new List<string>() { "USING STOGROUP" },
@@ -135,18 +135,18 @@ namespace DDL_Parser {
         return false;
       }
 
-      string name     = this.ddl.ConsumeId();
-                        this.ddl.Consume("(");
+      QualifiedName name =     this.ddl.ConsumeQualifiedName();
+                               this.ddl.Consume("(");
 
       this.fields      = new List<Field>();
       this.constraints = new List<Constraint>();
     
       while( this.ParseConstraint() || this.ParseField() ) {}
 
-                        this.ddl.Consume(")");
-                        this.ddl.Consume("IN");
+                               this.ddl.Consume(")");
+                               this.ddl.Consume("IN");
 
-      string database = this.ddl.ConsumeId();
+      QualifiedName database = this.ddl.ConsumeQualifiedName();
 
       Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
         merge:   new List<string>() { "DATA CAPTURE" }
@@ -171,13 +171,13 @@ namespace DDL_Parser {
         return false;
       }
 
-      string name = this.ddl.ConsumeId();
+      QualifiedName name = this.ddl.ConsumeQualifiedName();
 
       return this.ParsePrimaryKeyConstraint(name)
           || this.ParseForeignKeyConstraint(name);
     }
 
-    private bool ParsePrimaryKeyConstraint(string name) {
+    private bool ParsePrimaryKeyConstraint(QualifiedName name) {
       if( ! this.ddl.TryConsume("PRIMARY KEY ")
        && ! this.ddl.TryConsume("PRIMARY KEY\n") ) {
         return false;
@@ -196,7 +196,7 @@ namespace DDL_Parser {
       return true;
     }
 
-    private bool ParseForeignKeyConstraint(string name) {
+    private bool ParseForeignKeyConstraint(QualifiedName name) {
       if( ! this.ddl.TryConsume("FOREIGN KEY ")
        && ! this.ddl.TryConsume("FOREIGN KEY\n") ) {
         return false;
@@ -229,9 +229,9 @@ namespace DDL_Parser {
     }
 
     private bool ParseField() {
-      string name;
+      QualifiedName name;
       try {
-        name = this.ddl.ConsumeId();
+        name = this.ddl.ConsumeQualifiedName();
       } catch(ParseException) {
         // no ID, here means not a Field (anymore)
         return false;
@@ -286,12 +286,12 @@ namespace DDL_Parser {
         // without unique it might simply be some other create statement
         return false;
       }
-      string name   = this.ddl.ConsumeId();
-                      this.ddl.Consume("ON");
-      string table  = this.ddl.ConsumeId();
-                      this.ddl.Consume("(");
-      string fields = this.ddl.ConsumeUpTo(")");
-                      this.ddl.Consume(")");
+      QualifiedName name   = this.ddl.ConsumeQualifiedName();
+                             this.ddl.Consume("ON");
+      string        table  = this.ddl.ConsumeId();
+                             this.ddl.Consume("(");
+      string        fields = this.ddl.ConsumeUpTo(")");
+                             this.ddl.Consume(")");
 
       Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
         merge:   new List<string>() { "USING STOGROUP" },
@@ -300,9 +300,9 @@ namespace DDL_Parser {
       parameters.Add("UNIQUE", unique.ToString());
 
       this.statements.Add( new CreateIndexStatement() {
-        Name = name,
-        Table = table,
-        Fields = fields,
+        Name       = name,
+        Table      = table,
+        Fields     = fields,
         Parameters = parameters
       });
       return true;
@@ -314,13 +314,13 @@ namespace DDL_Parser {
       {
         return false;
       }
-      string name       = this.ddl.ConsumeId();
-                          this.ddl.Consume("AS");
-      string definition = this.ddl.ConsumeUpTo(";");
-                          this.ddl.Consume(";");
+      QualifiedName name       = this.ddl.ConsumeQualifiedName();
+                                 this.ddl.Consume("AS");
+      string        definition = this.ddl.ConsumeUpTo(";");
+                                 this.ddl.Consume(";");
 
       this.statements.Add( new CreateViewStatement() {
-        Name = name,
+        Name       = name,
         Definition = definition
       });
       return true;
@@ -367,12 +367,12 @@ namespace DDL_Parser {
       {
         return false;
       }
-      string name = this.ddl.ConsumeId();
+      QualifiedName name = this.ddl.ConsumeQualifiedName();
 
       return this.ParseAlterTableAddStatement(name);
     }
 
-    private bool ParseAlterTableAddStatement(string name) {
+    private bool ParseAlterTableAddStatement(QualifiedName name) {
       if( ! this.ddl.TryConsume("ADD ")
        && ! this.ddl.TryConsume("ADD\n") )
       {

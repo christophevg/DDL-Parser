@@ -19,7 +19,7 @@ namespace DDL_Parser {
     [Test]
     public void testCreateDatabaseStatement() {
       Assert.AreEqual(new CreateDatabaseStatement() {
-        Name       = "123",
+        Name       = new QualifiedName() { Name = "123" },
         Parameters = new Dictionary<string,string>() {
           { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
         }
@@ -29,8 +29,8 @@ namespace DDL_Parser {
     [Test]
     public void testCreateTablespaceStatement() {
       Assert.AreEqual(new CreateTablespaceStatement() {
-        Name         = "123",
-        Database     = "456",
+        Name         = new QualifiedName() { Name = "123" },
+        Database     = new QualifiedName() { Name = "456" },
         Parameters   = new Dictionary<string,string>() {
           { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
         }
@@ -40,7 +40,7 @@ namespace DDL_Parser {
     [Test]
     public void testField() {
       Assert.AreEqual(new Field() {
-        Name       = "Field1",
+        Name       = new QualifiedName() { Name = "Field1" },
         Type       = "Type1",
         Parameters = new Dictionary<string,string>() {
           { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
@@ -53,18 +53,18 @@ namespace DDL_Parser {
     [Test]
     public void testCreateTableStatement() {
       Assert.AreEqual(new CreateTableStatement() {
-        Name        = "Table1",
-        Database    = "Database1",
+        Name        = new QualifiedName() { Name = "Table1"    },
+        Database    = new QualifiedName() { Name = "Database1" },
         Fields      = new List<Field>() {
           new Field() {
-            Name       = "Field1",
+            Name       = new QualifiedName() { Name = "Field1" },
             Type       = "Type1",
             Parameters = new Dictionary<string,string>() {
               { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
             }
           },
           new Field() {
-            Name       = "Field2",
+            Name       = new QualifiedName() { Name = "Field2" },
             Type       = "Type2",
             Parameters = new Dictionary<string,string>() {
               { "p4", "v4" }
@@ -73,7 +73,7 @@ namespace DDL_Parser {
         },
         Constraints = new List<Constraint>() {
           new Constraint() {
-            Name       = "Constraint1",
+            Name       = new QualifiedName() { Name = "Constraint1" },
             Parameters = new Dictionary<string,string>() {
               { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
             }
@@ -90,9 +90,9 @@ namespace DDL_Parser {
     [Test]
     public void testCreateIndexStatement() {
       Assert.AreEqual(new CreateIndexStatement() {
-        Name = "Index1",
-        Table = "Table1",
-        Fields = "F1,F2,F3",
+        Name       = new QualifiedName() { Name = "Index1" },
+        Table      = "Table1",
+        Fields     = "F1,F2,F3",
         Parameters = new Dictionary<string,string>() {
           { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
         }
@@ -104,7 +104,7 @@ namespace DDL_Parser {
     [Test]
     public void testCreateViewStatement() {
       Assert.AreEqual(new CreateViewStatement() {
-        Name = "View1",
+        Name       = new QualifiedName() { Name = "View1" },
         Definition = "SELECT * FROM Table1"
       }.ToString(),
         "view(View1)[SELECT * FROM Table1]"

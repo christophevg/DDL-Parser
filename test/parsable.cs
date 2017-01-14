@@ -48,7 +48,7 @@ namespace DDL_Parser {
     [Test]
     public void testConsumeId() {
       Assert.AreEqual(new Parsable("   123 456;789").ConsumeId(), "123");
-      Assert.AreEqual(new Parsable("   123.456;789").ConsumeId(), "123.456");
+      Assert.AreEqual(new Parsable("   123.456;789").ConsumeId(), "123");
       try {
         new Parsable("  @123 456;789").ConsumeId();
         Assert.Fail("should have thrown");
@@ -189,6 +189,21 @@ namespace DDL_Parser {
     public void testPeek() {
       Assert.AreEqual(new Parsable("  123").Peek(6), " 123");
     }
-  }
 
+    [Test]
+    public void testSimpleQualifiedName() {
+      QualifiedName qn = new Parsable("  hello").ConsumeQualifiedName();
+      Assert.IsNull(qn.Scope);
+      Assert.AreEqual("hello", qn.Name);
+      Assert.AreEqual("hello", qn.ToString());
+    }
+
+    [Test]
+    public void testFullyQualifiedName() {
+      QualifiedName qn = new Parsable("  hello.world").ConsumeQualifiedName();
+      Assert.AreEqual("hello",       qn.Scope);
+      Assert.AreEqual("world",       qn.Name);
+      Assert.AreEqual("hello.world", qn.ToString());
+    }
+  }
 }
