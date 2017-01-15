@@ -126,6 +126,18 @@ namespace DDL_Parser {
           string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
         "}";
     }
+    public string SimpleName {
+      get {
+        return this.Name.ToString();
+      }
+      set {
+        if( this.Name != null ) {
+          this.Name.Name = value;
+        } else {
+          this.Name = new QualifiedName() { Name = value };
+        }
+      }
+    }
   }
 
   public class CreateViewStatement : CreateStatement {

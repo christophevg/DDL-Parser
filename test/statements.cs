@@ -100,6 +100,23 @@ namespace DDL_Parser {
         "index(Index1 on Table1[F1,F2,F3]){p1=v1,p2=v2,p3=v3}"
       );
     }
+
+    [Test]
+    public void testCreateIndexStatementSimpleName() {
+      var index = new CreateIndexStatement() {
+        Name       = new QualifiedName() { Name = "Index1" },
+        Table      = "Table1",
+        Fields     = "F1,F2,F3",
+        Parameters = new Dictionary<string,string>() {
+          { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
+        }
+      };
+      Assert.AreEqual( "Index1",      index.SimpleName );
+      index.SimpleName = "SimpleName1";
+      Assert.AreEqual( "SimpleName1", index.SimpleName );
+      // SimpleName == QualifiedName.Name
+      Assert.AreEqual( "SimpleName1", index.Name.Name );
+    }
   
     [Test]
     public void testCreateViewStatement() {
