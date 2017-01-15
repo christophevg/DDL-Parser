@@ -138,14 +138,16 @@ namespace DDL_Parser {
     }
     public string SimpleName {
       get {
-        return this.Name.ToString();
+        if( this.Name != null ) {
+          return this.Name.Name;
+        }
+        return null;
       }
       set {
-        if( this.Name != null ) {
-          this.Name.Name = value;
-        } else {
-          this.Name = new QualifiedName() { Name = value };
+        if( this.Name == null ) {
+          this.Name = new QualifiedName();
         }
+        this.Name.Name = value;
       }
     }
   }
