@@ -160,7 +160,7 @@ namespace DDL_Parser {
            ON DELETE RESTRICT
            ENFORCED
         ;",
-        "alter(Table1:FK_Name{ON_DELETE=RESTRICT,ENFORCED=True,KEYS=Field1,Field2,TABLE=FK_Table,REFERENCES=FK_Field1,FK_Field2})"
+        "alter(Table1:FK_Name ON FK_Table{ON_DELETE=RESTRICT,ENFORCED=True,KEYS=Field1,Field2,REFERENCES=FK_Field1,FK_Field2})"
       );
     }
 
@@ -185,7 +185,7 @@ namespace DDL_Parser {
            ON DELETE SET NULL
            ENFORCED
         ;",
-        "alter(Table1:FK_Name{ON_DELETE=SET_NULL,ENFORCED=True,KEYS=Field1,Field2,TABLE=FK_Table,REFERENCES=FK_Field1,FK_Field2})"
+        "alter(Table1:FK_Name ON FK_Table{ON_DELETE=SET_NULL,ENFORCED=True,KEYS=Field1,Field2,REFERENCES=FK_Field1,FK_Field2})"
       );
     }
 

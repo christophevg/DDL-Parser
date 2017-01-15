@@ -85,6 +85,16 @@ namespace DDL_Parser {
         "}";
     }
   }
+  
+  public class ForeignKeyConstraint : Constraint {
+    public QualifiedName Table { get; set; }
+    public override string ToString() {
+      return this.Name.ToString() + " ON " + this.Table.ToString() +
+        "{" +
+          string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+        "}";
+    }
+  }
 
   public class CreateTableStatement : CreateStatement {
     public QualifiedName             Database    { get; set; }

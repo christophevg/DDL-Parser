@@ -201,16 +201,16 @@ namespace DDL_Parser {
        && ! this.ddl.TryConsume("FOREIGN KEY\n") ) {
         return false;
       }
-                          this.ddl.Consume("(");
-      string keys       = this.ddl.ConsumeUpTo(")").Replace(" ", "");
-                          this.ddl.Consume(")");
+                                 this.ddl.Consume("(");
+      string        keys       = this.ddl.ConsumeUpTo(")").Replace(" ", "");
+                                 this.ddl.Consume(")");
 
-                          this.ddl.Consume("REFERENCES");
+                                 this.ddl.Consume("REFERENCES");
 
-      string table      = this.ddl.ConsumeId();
-                          this.ddl.Consume("(");
-      string references = this.ddl.ConsumeUpTo(")").Replace(" ", "");
-                          this.ddl.Consume(")");
+      QualifiedName table      = this.ddl.ConsumeQualifiedName();
+                                 this.ddl.Consume("(");
+      string        references = this.ddl.ConsumeUpTo(")").Replace(" ", "");
+                                 this.ddl.Consume(")");
 
       Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
         merge:   new List<string>() { "ON DELETE", "SET NULL" },
@@ -218,11 +218,11 @@ namespace DDL_Parser {
       );
 
       parameters.Add("KEYS",       keys      );
-      parameters.Add("TABLE",      table     );
       parameters.Add("REFERENCES", references);
 
-      this.constraints.Add(new Constraint() {
+      this.constraints.Add(new ForeignKeyConstraint() {
         Name       = name,
+        Table      = table,
         Parameters = parameters
       });
       return true;
