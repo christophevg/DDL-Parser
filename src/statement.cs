@@ -112,7 +112,7 @@ namespace DDL_Parser {
   }
 
   public class CreateIndexStatement : CreateStatement {
-    public string                    Table      { get; set; }
+    public QualifiedName             Table      { get; set; }
     public string                    Fields     { get; set; }
     public Dictionary<string,string> Parameters { get; set; }
     public CreateIndexStatement() {

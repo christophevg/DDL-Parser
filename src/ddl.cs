@@ -288,7 +288,7 @@ namespace DDL_Parser {
       }
       QualifiedName name   = this.ddl.ConsumeQualifiedName();
                              this.ddl.Consume("ON");
-      string        table  = this.ddl.ConsumeId();
+      QualifiedName table  = this.ddl.ConsumeQualifiedName();
                              this.ddl.Consume("(");
       string        fields = this.ddl.ConsumeUpTo(")");
                              this.ddl.Consume(")");

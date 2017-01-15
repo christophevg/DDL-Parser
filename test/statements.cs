@@ -91,7 +91,7 @@ namespace DDL_Parser {
     public void testCreateIndexStatement() {
       Assert.AreEqual(new CreateIndexStatement() {
         Name       = new QualifiedName() { Name = "Index1" },
-        Table      = "Table1",
+        Table      = new QualifiedName() { Name = "Table1" },
         Fields     = "F1,F2,F3",
         Parameters = new Dictionary<string,string>() {
           { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
@@ -105,7 +105,7 @@ namespace DDL_Parser {
     public void testCreateIndexStatementSimpleName() {
       var index = new CreateIndexStatement() {
         Name       = new QualifiedName() { Name = "Index1" },
-        Table      = "Table1",
+        Table      = new QualifiedName() { Name = "Table1" },
         Fields     = "F1,F2,F3",
         Parameters = new Dictionary<string,string>() {
           { "p1", "v1" }, { "p2", "v2" }, { "p3", "v3" }
