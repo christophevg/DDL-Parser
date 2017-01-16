@@ -27,6 +27,20 @@ namespace DDL_Parser {
   
   public abstract class NamedStatement : Statement {
     public QualifiedName Name { get; set; }
+    public string SimpleName {
+      get {
+        if( this.Name != null ) {
+          return this.Name.Name;
+        }
+        return null;
+      }
+      set {
+        if( this.Name == null ) {
+          this.Name = new QualifiedName();
+        }
+        this.Name.Name = value;
+      }
+    }
   }
 
   public abstract class CreateStatement : NamedStatement {}
@@ -104,7 +118,7 @@ namespace DDL_Parser {
     public CreateTableStatement() {
       this.Fields      = new List<Field>();
       this.Constraints = new List<Constraint>();
-      this.Parameters = new Dictionary<string,string>();
+      this.Parameters  = new Dictionary<string,string>();
     }
     public override string ToString() {
       return "table(" + this.Name.ToString() +
@@ -135,20 +149,6 @@ namespace DDL_Parser {
         "{" +
           string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
         "}";
-    }
-    public string SimpleName {
-      get {
-        if( this.Name != null ) {
-          return this.Name.Name;
-        }
-        return null;
-      }
-      set {
-        if( this.Name == null ) {
-          this.Name = new QualifiedName();
-        }
-        this.Name.Name = value;
-      }
     }
   }
 
