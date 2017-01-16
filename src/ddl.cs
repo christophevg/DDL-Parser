@@ -372,7 +372,7 @@ namespace DDL_Parser {
       return this.ParseAlterTableAddStatement(name);
     }
 
-    private bool ParseAlterTableAddStatement(QualifiedName name) {
+    private bool ParseAlterTableAddStatement(QualifiedName table) {
       if( ! this.ddl.TryConsume("ADD ")
        && ! this.ddl.TryConsume("ADD\n") )
       {
@@ -382,7 +382,7 @@ namespace DDL_Parser {
 
       if( this.ParseConstraint() ) {
         this.statements.Add(new AlterTableAddConstraintStatement() {
-          Name       = name,
+          Table      = table,
           Constraint = this.constraints[0]
         });
       }

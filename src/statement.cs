@@ -176,11 +176,11 @@ namespace DDL_Parser {
   public abstract class AlterStatement : Statement {}
 
   public class AlterTableAddConstraintStatement : AlterStatement {
-    public QualifiedName Name       { get; set; }
+    public QualifiedName Table      { get; set; }
     public Constraint    Constraint { get; set; }
   
     public override string ToString() {
-      return "alter(" + this.Name.ToString() + ":" + this.Constraint + ")";
+      return "alter(" + this.Table.ToString() + ":" + this.Constraint + ")";
     }
   }
 

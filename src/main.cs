@@ -66,14 +66,14 @@ namespace DDL_Parser {
                         where alteration.Constraint.Parameters.Keys.Contains("ON_DELETE")
                            && alteration.Constraint.Parameters["ON_DELETE"] == "RESTRICT"
                        select new {
-                         Name  = alteration.Name,
-                         Table = ((ForeignKeyConstraint)alteration.Constraint).Table
+                         Table       = alteration.Table,
+                         Referencing = ((ForeignKeyConstraint)alteration.Constraint).Table
                        };
 
       Console.WriteLine("Query 2: find all foreign keys with 'on delete restrict'");
       Console.WriteLine("--------------------------------------------------------");
       foreach(var constraint in constraints) {
-        Console.WriteLine(constraint.Name + " on " + constraint.Table );
+        Console.WriteLine(constraint.Table + " referencing " + constraint.Referencing );
       }
       Console.WriteLine();
 
