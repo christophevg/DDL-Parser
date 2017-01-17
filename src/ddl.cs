@@ -124,10 +124,6 @@ namespace DDL_Parser {
       return true;
     }
 
-    // the currently being parsed field and constraint lists
-    private List<Field>      fields      = new List<Field>();
-    private List<Constraint> constraints = new List<Constraint>();
-
     private bool ParseCreateTableStatement() {
       if( ! this.ddl.TryConsume("TABLE ")
        && ! this.ddl.TryConsume("TABLE\n") )
@@ -135,13 +131,17 @@ namespace DDL_Parser {
         return false;
       }
 
+      List<Field>      fields      = new List<Field>();
+      List<Constraint> constraints = new List<Constraint>();
+
       QualifiedName name =     this.ddl.ConsumeQualifiedName();
                                this.ddl.Consume("(");
-
-      this.fields      = new List<Field>();
-      this.constraints = new List<Constraint>();
     
-      while( this.ParseConstraint() || this.ParseField() ) {}
+      while(                   this.ParseConstraint(constraints)
+                            || this.ParseField(fields)
+           ) {
+             this.ddl.TryConsume(",");
+           }
 
                                this.ddl.Consume(")");
                                this.ddl.Consume("IN");
@@ -155,8 +155,8 @@ namespace DDL_Parser {
       CreateTableStatement stmt = 
         new CreateTableStatement() {
           Name        = name,
-          Fields      = this.fields,
-          Constraints = this.constraints,
+          Fields      = fields,
+          Constraints = constraints,
           Database    = database,
           Parameters  = parameters
         };
@@ -164,7 +164,7 @@ namespace DDL_Parser {
       return true;
     }
 
-    private bool ParseConstraint() {
+    private bool ParseConstraint(List<Constraint> constraints) {
       if( ! this.ddl.TryConsume("CONSTRAINT ")
        && ! this.ddl.TryConsume("CONSTRAINT\n") )
       {
@@ -173,11 +173,14 @@ namespace DDL_Parser {
 
       QualifiedName name = this.ddl.ConsumeQualifiedName();
 
-      return this.ParsePrimaryKeyConstraint(name)
-          || this.ParseForeignKeyConstraint(name);
+      return this.ParsePrimaryKeyConstraint (name, constraints)
+          || this.ParseForeignKeyConstraint (name, constraints)
+          || this.ParseCheckConstraint      (name, constraints);
     }
 
-    private bool ParsePrimaryKeyConstraint(QualifiedName name) {
+    private bool ParsePrimaryKeyConstraint(QualifiedName    name,
+                                           List<Constraint> constraints)
+    {
       if( ! this.ddl.TryConsume("PRIMARY KEY ")
        && ! this.ddl.TryConsume("PRIMARY KEY\n") ) {
         return false;
@@ -187,7 +190,7 @@ namespace DDL_Parser {
       string fields = this.ddl.ConsumeUpTo(")");
                       this.ddl.Consume(")");
 
-      this.constraints.Add(new Constraint() {
+      constraints.Add(new Constraint() {
         Name       = name,
         Parameters = new Dictionary<string,string>() {
           { "PRIMARY_KEY", fields }
@@ -196,7 +199,9 @@ namespace DDL_Parser {
       return true;
     }
 
-    private bool ParseForeignKeyConstraint(QualifiedName name) {
+    private bool ParseForeignKeyConstraint(QualifiedName    name,
+                                           List<Constraint> constraints)
+    {
       if( ! this.ddl.TryConsume("FOREIGN KEY ")
        && ! this.ddl.TryConsume("FOREIGN KEY\n") ) {
         return false;
@@ -220,7 +225,7 @@ namespace DDL_Parser {
       parameters.Add("KEYS",       keys      );
       parameters.Add("REFERENCES", references);
 
-      this.constraints.Add(new ForeignKeyConstraint() {
+      constraints.Add(new ForeignKeyConstraint() {
         Name       = name,
         Table      = table,
         Parameters = parameters
@@ -228,7 +233,27 @@ namespace DDL_Parser {
       return true;
     }
 
-    private bool ParseField() {
+    private bool ParseCheckConstraint(QualifiedName    field,
+                                      List<Constraint> constraints)
+    {
+      if( ! this.ddl.TryConsume("CHECK ")
+       && ! this.ddl.TryConsume("CHECK\n") ) {
+        return false;
+      }
+      
+                     this.ddl.Consume("(");
+      string rules = this.ddl.ConsumeUpTo(")");
+                     this.ddl.Consume(")");
+
+      constraints.Add(new CheckConstraint() {
+        Field = field,
+        Rules = rules
+      });
+
+      return true;
+    }
+
+    private bool ParseField(List<Field>fields) {
       QualifiedName name;
       try {
         name = this.ddl.ConsumeQualifiedName();
@@ -239,15 +264,20 @@ namespace DDL_Parser {
 
       string type = this.ParseType();
 
-      Dictionary<string,string> parameters = this.ddl.ConsumeDictionary(
-        upTo: ",", merge: new List<string> { "SBCS DATA" }
-      );
+      Dictionary<string,string> parameters  = new Dictionary<string,string>();
+      List<Constraint>          constraints = new List<Constraint>();
 
-      this.fields.Add(new Field() {
-        Name       = name,
-        Type       = type,
-        Parameters = parameters
+      while( this.ParseConstraint(constraints)
+          || this.ParseFieldParameter(parameters) )
+      {}
+
+      fields.Add(new Field() {
+        Name        = name,
+        Type        = type,
+        Parameters  = parameters,
+        Constraints = constraints
       });
+
       return true;
     }
 
@@ -268,6 +298,21 @@ namespace DDL_Parser {
       type += ")";
 
       return type;
+    }
+
+    private bool ParseFieldParameter(Dictionary<string,string> parameters) {
+      if( this.ddl.TryConsume("NOT NULL") ) {
+        parameters["NULL"] = "False";
+      } else if( this.ddl.TryConsume("FOR") ) {
+        parameters["FOR"] = this.ddl.ConsumeId() + "_DATA";
+        this.ddl.Consume("DATA");
+      } else if( this.ddl.TryConsume("WITH DEFAULT") ) {
+        parameters["DEFAULT"] = "True";
+        // TODO: support provided value
+      } else {
+        return false;
+      }
+      return true;
     }
 
     private bool ParseCreateIndexStatement() {
@@ -378,12 +423,12 @@ namespace DDL_Parser {
       {
         return false;
       }
-      this.constraints = new List<Constraint>();
+      List<Constraint> constraints = new List<Constraint>();
 
-      if( this.ParseConstraint() ) {
+      if( this.ParseConstraint(constraints) ) {
         this.statements.Add(new AlterTableAddConstraintStatement() {
           Table      = table,
-          Constraint = this.constraints[0]
+          Constraint = constraints[0]
         });
       }
       return true;

@@ -223,6 +223,23 @@ namespace DDL_Parser {
         this.ddl.errors[0].Message
       );
     }
-  }
 
+    [Test]
+    public void testColumnConstraint() {
+      this.parseAndCompare(
+        @"
+          CREATE TABLE Test1
+          (
+            Field1 Type(1) NOT NULL
+            CONSTRAINT Field1 CHECK (
+              Field1 = '0' OR Field1 = '1'
+            )
+          ) IN Space1;
+        ",
+        "table(Test1 in Space1)" +
+        "[Field1:Type(1){NULL=False}"+
+        "<check:Field1:=Field1 = '0' OR Field1 = '1'>]"
+      );
+    }
+  }
 }
