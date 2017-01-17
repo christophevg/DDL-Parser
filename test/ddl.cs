@@ -241,5 +241,15 @@ namespace DDL_Parser {
         "<check:Field1:=Field1 = '0' OR Field1 = '1'>]"
       );
     }
+
+    [Test]
+    public void testWithDefaultWithValue() {
+      this.parseAndCompare(
+        @"CREATE TABLE Test1 (
+            Field1 Type(1) WITH DEFAULT '0'
+          ) IN Space1;",
+        "table(Test1 in Space1)[Field1:Type(1){DEFAULT=0}]"
+      );
+    }
   }
 }

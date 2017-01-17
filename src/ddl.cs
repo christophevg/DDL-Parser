@@ -307,11 +307,25 @@ namespace DDL_Parser {
         parameters["FOR"] = this.ddl.ConsumeId() + "_DATA";
         this.ddl.Consume("DATA");
       } else if( this.ddl.TryConsume("WITH DEFAULT") ) {
-        parameters["DEFAULT"] = "True";
-        // TODO: support provided value
+        // a Literal might be provided
+        string literal = "True"; // default to omitted positive boolean value
+        this.ParseLiteral(ref literal);
+        parameters["DEFAULT"] = literal;
+
       } else {
         return false;
       }
+      return true;
+    }
+
+    private bool ParseLiteral(ref string literal) {
+      return this.ParseStringLiteral(ref literal);
+    }
+
+    private bool ParseStringLiteral(ref string literal) {
+      if( ! this.ddl.TryConsume("'") ) { return false; }
+      literal = this.ddl.ConsumeUpTo("'");
+      this.ddl.Consume("'");
       return true;
     }
 
