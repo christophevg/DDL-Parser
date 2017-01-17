@@ -143,12 +143,18 @@ namespace DDL_Parser {
         "["+
           string.Join(",", this.Fields) +
         "]"+
-        "<"+
-          string.Join(",", this.Constraints) +
-        ">"+
-        "{" +
-          string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
-        "}";
+        ( this.Constraints.Count > 0 ?
+          "<"+
+            string.Join(",", this.Constraints) +
+          ">"
+          : ""
+        ) +
+        ( this.Parameters.Count > 0 ?
+          "{" +
+            string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
+          "}"
+          : ""
+        );
     }
   }
 
