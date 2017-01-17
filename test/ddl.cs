@@ -243,7 +243,17 @@ namespace DDL_Parser {
     }
 
     [Test]
-    public void testWithDefaultWithValue() {
+    public void testWithDefaultWithNoExplicitValue() {
+      this.parseAndCompare(
+        @"CREATE TABLE Test1 (
+            Field1 Type(1) WITH DEFAULT
+          ) IN Space1;",
+        "table(Test1 in Space1)[Field1:Type(1){DEFAULT=True}]"
+      );
+    }
+
+    [Test]
+    public void testWithDefaultWithStringValue() {
       this.parseAndCompare(
         @"CREATE TABLE Test1 (
             Field1 Type(1) WITH DEFAULT '0'
@@ -251,5 +261,16 @@ namespace DDL_Parser {
         "table(Test1 in Space1)[Field1:Type(1){DEFAULT=0}]"
       );
     }
+
+    [Test]
+    public void testWithDefaultWithNumericValue() {
+      this.parseAndCompare(
+        @"CREATE TABLE Test1 (
+            Field1 Type(1) WITH DEFAULT 123
+          ) IN Space1;",
+        "table(Test1 in Space1)[Field1:Type(1){DEFAULT=123}]"
+      );
+    }
+
   }
 }

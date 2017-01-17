@@ -319,7 +319,8 @@ namespace DDL_Parser {
     }
 
     private bool ParseLiteral(ref string literal) {
-      return this.ParseStringLiteral(ref literal);
+      return this.ParseStringLiteral(ref literal)
+          || this.ParseNumericLiteral(ref literal);
     }
 
     private bool ParseStringLiteral(ref string literal) {
@@ -327,6 +328,10 @@ namespace DDL_Parser {
       literal = this.ddl.ConsumeUpTo("'");
       this.ddl.Consume("'");
       return true;
+    }
+
+    private bool ParseNumericLiteral(ref string literal) {
+      return this.ddl.TryConsumeNumber(ref literal);
     }
 
     private bool ParseCreateIndexStatement() {
