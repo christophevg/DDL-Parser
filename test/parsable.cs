@@ -205,5 +205,13 @@ namespace DDL_Parser {
       Assert.AreEqual("world",       qn.Name);
       Assert.AreEqual("hello.world", qn.ToString());
     }
+
+    [Test]
+    public void testTryConsumeNumber() {
+      string literal = "";
+      Assert.IsTrue(new Parsable("   123 456;789").TryConsumeNumber(ref literal));
+      Assert.AreEqual("123", literal);
+    }
+
   }
 }

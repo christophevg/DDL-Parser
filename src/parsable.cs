@@ -141,6 +141,15 @@ namespace DDL_Parser {
       throw new ParseException( "could not consume number at " + this.Context );
     }
 
+    public bool TryConsumeNumber(ref string literal) {
+      try {
+        literal = this.ConsumeNumber();
+        return true;
+      } catch(ParseException) {
+        return false;
+      }
+    }
+
     // consumes key value pairs into a dictionary
     public Dictionary<string,string> ConsumeDictionary(string upTo          = ";",
                                                        char   separator     = ' ',
