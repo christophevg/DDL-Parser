@@ -1,7 +1,7 @@
 # DDL Parser
 
 A DDL parser providing an Object-Oriented, Queryable (read: Linq) interface 
-Christophe VG (<contact@christophe.vg>)
+Christophe VG (<contact@christophe.vg>)  
 [https://github.com/christophevg/DDL-Parser](https://github.com/christophevg/DDL-Parser)
 
 ## Disclaimer
