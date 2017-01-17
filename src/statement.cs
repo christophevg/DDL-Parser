@@ -110,6 +110,14 @@ namespace DDL_Parser {
     }
   }
 
+  public class CheckConstraint : Constraint {
+    public QualifiedName Field { get; set; }
+    public string        Rules { get; set; }
+    public override string ToString() {
+      return "check:" + this.Field.ToString() + ":=" + this.Rules;
+    }
+  }
+
   public class CreateTableStatement : CreateStatement {
     public QualifiedName             Database    { get; set; }
     public List<Field>               Fields      { get; set; }

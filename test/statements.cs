@@ -156,6 +156,17 @@ namespace DDL_Parser {
         "Name1"
       );
     }
-  }
 
+    [Test]
+    public void testCheckConstraint() {
+      string rules = "Field1 = '0' OR Field1 = '1'";
+      Assert.AreEqual(
+        "check:Field1:="+rules,
+        new CheckConstraint() {
+          Field = new QualifiedName() { Name  = "Field1" },
+          Rules = rules
+        }.ToString()
+      );
+    }
+  }
 }
