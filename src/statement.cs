@@ -76,14 +76,23 @@ namespace DDL_Parser {
   public class Field : NamedStatement {
     public string Type                          { get; set; }
     public Dictionary<string,string> Parameters { get; set; }
+    public List<Constraint>          Constraints { get; set; }
     public Field() {
       this.Parameters = new Dictionary<string,string>();
+      this.Constraints = new List<Constraint>();
     }
     public override string ToString() {
       return this.Name.ToString() + ":" + this.Type +
         "{" +
           string.Join(",", this.Parameters.Select(x => x.Key + "=" + x.Value)) +
-        "}";
+        "}" +
+        ( 
+          this.Constraints.Count > 0 ?
+            "<" +
+              string.Join(";", this.Constraints.Select(x => x.ToString())) +
+            ">"
+          : ""
+        );
     }
   }
 
